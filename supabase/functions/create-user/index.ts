@@ -69,6 +69,75 @@ serve(async (req) => {
 
     if (authError) {
       console.error('❌ Auth error:', authError)
+      
+      // Check if user already exists
+      if (authError.message.includes('already been registered') || authError.message.includes('email_exists')) {
+        console.log('⚠️ User already exists, checking if we can update profile...')
+        
+        // Try to get existing user by email
+        const { data: existingUsers, error: listError } = await supabaseClient.auth.admin.listUsers()
+        
+        if (listError) {
+          console.error('❌ Error listing users:', listError)
+          return new Response(
+            JSON.stringify({ error: 'Failed to check existing users' }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        }
+        
+        const existingUser = existingUsers.users.find(user => user.email === email)
+        
+        if (existingUser) {
+          console.log('✅ Found existing user:', existingUser.id)
+          
+          // Update or create profile for existing user
+          const { error: upsertError } = await supabaseClient
+            .from('profiles')
+            .upsert({
+              user_id: existingUser.id,
+              email,
+              full_name,
+              role,
+              phone: phone || null,
+              specialization: specialization || null,
+              license_number: license_number || null,
+            }, {
+              onConflict: 'user_id'
+            })
+          
+          if (upsertError) {
+            console.error('❌ Profile upsert error:', upsertError)
+            return new Response(
+              JSON.stringify({ error: upsertError.message }),
+              { 
+                status: 400, 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              }
+            )
+          }
+          
+          console.log('✅ Profile updated for existing user')
+          
+          return new Response(
+            JSON.stringify({ 
+              success: true,
+              message: 'User profile updated successfully',
+              user: {
+                id: existingUser.id,
+                email: existingUser.email
+              }
+            }),
+            { 
+              status: 200, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        }
+      }
+      
       return new Response(
         JSON.stringify({ error: authError.message }),
         { 
