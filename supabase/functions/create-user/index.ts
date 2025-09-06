@@ -98,9 +98,9 @@ serve(async (req) => {
             .from('profiles')
             .select('*')
             .eq('user_id', existingUser.id)
-            .single();
+            .maybeSingle();
 
-          if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+          if (checkError) {
             console.error('❌ Error checking existing profile:', checkError)
             return new Response(
               JSON.stringify({ error: checkError.message }),
@@ -198,19 +198,51 @@ serve(async (req) => {
     if (profileError) {
       console.error('❌ Profile error:', profileError)
       console.log('🧹 Cleaning up auth user...')
-      // If profile creation fails, clean up the auth user
-      await supabaseClient.auth.admin.deleteUser(authData.user.id)
       
-      return new Response(
-        JSON.stringify({ error: profileError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
+      // If it's a duplicate key error, it means the profile already exists
+      if (profileError.code === '23505' && profileError.message.includes('profiles_user_id_key')) {
+        console.log('⚠️ Profile already exists, updating instead...')
+        
+        const { error: updateError } = await supabaseClient
+          .from('profiles')
+          .update({
+            email,
+            full_name,
+            role,
+            phone: phone || null,
+            specialization: specialization || null,
+            license_number: license_number || null,
+          })
+          .eq('user_id', authData.user.id)
 
-    console.log('✅ Profile created successfully')
+        if (updateError) {
+          console.error('❌ Profile update error:', updateError)
+          await supabaseClient.auth.admin.deleteUser(authData.user.id)
+          return new Response(
+            JSON.stringify({ error: updateError.message }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        }
+        
+        console.log('✅ Profile updated successfully')
+      } else {
+        // If profile creation fails with other error, clean up the auth user
+        await supabaseClient.auth.admin.deleteUser(authData.user.id)
+        
+        return new Response(
+          JSON.stringify({ error: profileError.message }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+    } else {
+      console.log('✅ Profile created successfully')
+    }
     console.log('🎉 User creation completed successfully')
 
     return new Response(
