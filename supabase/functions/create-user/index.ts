@@ -94,24 +94,56 @@ serve(async (req) => {
           console.log('✅ Found existing user:', existingUser.id)
           
           // Update or create profile for existing user
-          const { error: upsertError } = await supabaseClient
+          const { data: existingProfile, error: checkError } = await supabaseClient
             .from('profiles')
-            .upsert({
-              user_id: existingUser.id,
-              email,
-              full_name,
-              role,
-              phone: phone || null,
-              specialization: specialization || null,
-              license_number: license_number || null,
-            }, {
-              onConflict: 'user_id'
-            })
-          
-          if (upsertError) {
-            console.error('❌ Profile upsert error:', upsertError)
+            .select('*')
+            .eq('user_id', existingUser.id)
+            .single();
+
+          if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            console.error('❌ Error checking existing profile:', checkError)
             return new Response(
-              JSON.stringify({ error: upsertError.message }),
+              JSON.stringify({ error: checkError.message }),
+              { 
+                status: 500, 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+              }
+            )
+          }
+
+          let profileOperation;
+          if (existingProfile) {
+            // Update existing profile
+            profileOperation = await supabaseClient
+              .from('profiles')
+              .update({
+                email,
+                full_name,
+                role,
+                phone: phone || null,
+                specialization: specialization || null,
+                license_number: license_number || null,
+              })
+              .eq('user_id', existingUser.id);
+          } else {
+            // Create new profile
+            profileOperation = await supabaseClient
+              .from('profiles')
+              .insert({
+                user_id: existingUser.id,
+                email,
+                full_name,
+                role,
+                phone: phone || null,
+                specialization: specialization || null,
+                license_number: license_number || null,
+              });
+          }
+
+          if (profileOperation.error) {
+            console.error('❌ Profile operation error:', profileOperation.error)
+            return new Response(
+              JSON.stringify({ error: profileOperation.error.message }),
               { 
                 status: 400, 
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -119,7 +151,7 @@ serve(async (req) => {
             )
           }
           
-          console.log('✅ Profile updated for existing user')
+          console.log('✅ Profile operation completed for existing user')
           
           return new Response(
             JSON.stringify({ 
