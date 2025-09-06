@@ -33,7 +33,7 @@ interface Profile {
   user_id: string;
   email: string;
   full_name: string | null;
-  role: 'admin' | 'doctor' | 'nurse' | 'receptionist';
+  role: 'admin' | 'doctor' | 'nurse';
   phone: string | null;
   specialization: string | null;
   license_number: string | null;
@@ -67,7 +67,7 @@ const Admin = () => {
     email: '',
     password: '',
     full_name: '',
-    role: 'receptionist' as Profile['role'],
+    role: 'nurse' as Profile['role'],
     phone: '',
     specialization: '',
     license_number: ''
@@ -99,10 +99,10 @@ const Admin = () => {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
-        .order('created_at', { ascending: false });
+         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
-      setProfiles(profilesData || []);
+      setProfiles((profilesData || []).filter(p => p.role !== 'receptionist') as Profile[]);
 
       // Fetch calendar permissions
       const { data: permissionsData, error: permissionsError } = await supabase
@@ -175,7 +175,7 @@ const Admin = () => {
         email: '',
         password: '',
         full_name: '',
-        role: 'receptionist',
+        role: 'nurse',
         phone: '',
         specialization: '',
         license_number: ''
@@ -215,6 +215,42 @@ const Admin = () => {
         description: error.message || "Nije moguće promeniti status korisnika",
         variant: "destructive",
       });
+    }
+  };
+
+  const deleteUser = async (userId: string, userEmail: string) => {
+    if (userEmail === user?.email) {
+      toast({
+        title: "Greška",
+        description: "Ne možete obrisati svoj sopstveni nalog",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (window.confirm('Da li ste sigurni da želite da obrišete ovog korisnika? Ova akcija se ne može poništiti.')) {
+      try {
+        // First delete the profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .delete()
+          .eq('id', userId);
+
+        if (profileError) throw profileError;
+
+        toast({
+          title: "Uspešno",
+          description: "Korisnik je uspešno obrisan",
+        });
+
+        fetchData();
+      } catch (error: any) {
+        toast({
+          title: "Greška",
+          description: error.message || "Nije moguće obrisati korisnika",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -284,7 +320,6 @@ const Admin = () => {
       case 'admin': return 'bg-destructive text-destructive-foreground';
       case 'doctor': return 'bg-primary text-primary-foreground';
       case 'nurse': return 'bg-success text-success-foreground';
-      case 'receptionist': return 'bg-secondary text-secondary-foreground';
       default: return 'bg-muted text-muted-foreground';
     }
   };
@@ -294,7 +329,6 @@ const Admin = () => {
       case 'admin': return 'Administrator';
       case 'doctor': return 'Lekar';
       case 'nurse': return 'Sestra';
-      case 'receptionist': return 'Recepcioner';
       default: return 'Nepoznato';
     }
   };
@@ -396,7 +430,7 @@ const Admin = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="receptionist">Recepcioner</SelectItem>
+                            
                             <SelectItem value="nurse">Sestra</SelectItem>
                             <SelectItem value="doctor">Lekar</SelectItem>
                             <SelectItem value="admin">Administrator</SelectItem>
@@ -501,33 +535,44 @@ const Admin = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant={profile.is_active ? "outline" : "default"}
-                          size="sm"
-                          onClick={() => toggleUserStatus(profile.id, profile.is_active)}
-                          className="transition-all duration-200"
-                        >
-                          {profile.is_active ? (
-                            <>
-                              <EyeOff className="h-4 w-4 mr-1" />
-                              Deaktiviraj
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="h-4 w-4 mr-1" />
-                              Aktiviraj
-                            </>
-                          )}
-                        </Button>
-                        <div className="flex items-center">
-                          {profile.is_active ? (
-                            <CheckCircle className="h-5 w-5 text-success" />
-                          ) : (
-                            <XCircle className="h-5 w-5 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
+                       <div className="flex items-center space-x-2">
+                         <Button
+                           variant={profile.is_active ? "outline" : "default"}
+                           size="sm"
+                           onClick={() => toggleUserStatus(profile.id, profile.is_active)}
+                           className="transition-all duration-200"
+                         >
+                           {profile.is_active ? (
+                             <>
+                               <EyeOff className="h-4 w-4 mr-1" />
+                               Deaktiviraj
+                             </>
+                           ) : (
+                             <>
+                               <Eye className="h-4 w-4 mr-1" />
+                               Aktiviraj
+                             </>
+                           )}
+                         </Button>
+                         
+                         <Button
+                           variant="destructive"
+                           size="sm"
+                           onClick={() => deleteUser(profile.id, profile.email)}
+                           className="transition-all duration-200"
+                         >
+                           <Trash2 className="h-4 w-4 mr-1" />
+                           Obriši
+                         </Button>
+                         
+                         <div className="flex items-center">
+                           {profile.is_active ? (
+                             <CheckCircle className="h-5 w-5 text-success" />
+                           ) : (
+                             <XCircle className="h-5 w-5 text-muted-foreground" />
+                           )}
+                         </div>
+                       </div>
                     </div>
                   </CardContent>
                 </Card>
