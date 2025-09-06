@@ -374,7 +374,19 @@ const Appointments = () => {
               
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="patient_select">Pacijent</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="patient_select">Pacijent</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/patients')}
+                      className="text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Dodaj novog
+                    </Button>
+                  </div>
                   <Select value={appointmentForm.patient_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, patient_id: value }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Izaberite pacijenta" />

@@ -72,7 +72,7 @@ const Dashboard = () => {
         setStats({
           todayAppointments: todayCount || 0,
           totalPatients: patientsCount || 0,
-          lowStockItems: lowStock?.length || 0,
+          lowStockItems: 0,
           pendingAppointments: pendingCount || 0
         });
       } catch (error) {
@@ -170,7 +170,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Današnji pregledi</CardTitle>
@@ -197,18 +197,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Niske zalihe</CardTitle>
-              <Package className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.lowStockItems}</div>
-              <p className="text-xs text-muted-foreground">
-                artikala za dopunu
-              </p>
-            </CardContent>
-          </Card>
 
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -260,22 +248,6 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
 
-          <Card 
-            className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-elevated transition-all duration-200 cursor-pointer group"
-            onClick={() => navigate('/inventory')}
-          >
-            <CardHeader>
-              <div className="flex items-center space-x-3">
-                <div className="bg-warning/10 p-3 rounded-lg group-hover:bg-warning/20 transition-colors duration-200">
-                  <Package className="h-6 w-6 text-warning" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Upravljaj zalihama</CardTitle>
-                  <CardDescription>Pregled i upravljanje medicinskim zalihama</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
 
           {profile?.role === 'admin' && (
             <Card 
