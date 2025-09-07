@@ -245,7 +245,8 @@ const SpecialistReport = () => {
           
           .section {
             margin-bottom: 15px;
-            padding-left: 0px;
+            border-left: 4px solid #3182ce;
+            padding-left: 15px;
             page-break-inside: avoid;
             break-inside: avoid;
           }
