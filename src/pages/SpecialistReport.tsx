@@ -190,7 +190,7 @@ const SpecialistReport = () => {
           
           .document {
             background: #ffffff;
-            padding: 25px 25px 60px 25px;
+            padding: 25px;
             min-height: calc(100vh - 50px);
           }
           
@@ -279,33 +279,38 @@ const SpecialistReport = () => {
           }
           
           .footer {
-            position: fixed;
-            bottom: 1cm;
-            right: 0.8in;
-            left: 0.8in;
-            background: #ffffff;
+            margin-top: 30px;
             padding: 8px 0;
             text-align: right;
             height: auto;
+            break-inside: avoid;
+            page-break-inside: avoid;
           }
           
           @media print {
+            body {
+              padding: 0;
+              background: white;
+            }
+            .document {
+              box-shadow: none;
+              min-height: auto;
+            }
             .footer {
-              right: 0.8in !important;
-              left: 0.8in !important;
-              bottom: 1cm !important;
+              position: static;
+              margin-top: 30px;
             }
           }
           
           .signature-line {
             border-bottom: 1px solid #000;
-            width: 200px;
-            margin: 20px 0 10px auto;
-            height: 20px;
+            width: 180px;
+            margin: 10px 0 5px auto;
+            height: 15px;
           }
           
           .doctor-signature {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a365d;
           }
