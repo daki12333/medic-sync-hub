@@ -281,12 +281,20 @@ const SpecialistReport = () => {
           .footer {
             position: fixed;
             bottom: 1cm;
-            right: 25px;
-            left: 25px;
+            right: 0.8in;
+            left: 0.8in;
             background: #ffffff;
             padding: 8px 0;
             text-align: right;
             height: auto;
+          }
+          
+          @media print {
+            .footer {
+              right: 0.8in !important;
+              left: 0.8in !important;
+              bottom: 1cm !important;
+            }
           }
           
           .signature-line {
