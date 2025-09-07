@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,7 +18,6 @@ import {
   Activity,
   Clock,
   User,
-  FileText,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -75,9 +73,7 @@ const Appointments = () => {
     doctor_id: '',
     appointment_date: new Date().toISOString().split('T')[0],
     appointment_time: '',
-    duration_minutes: 30,
-    reason: '',
-    notes: ''
+    duration_minutes: 30
   });
 
   useEffect(() => {
@@ -159,9 +155,7 @@ const Appointments = () => {
         .from('appointments')
         .insert({
           ...appointmentForm,
-          created_by: profile?.id,
-          reason: appointmentForm.reason || null,
-          notes: appointmentForm.notes || null
+          created_by: profile?.id
         });
 
       if (error) throw error;
@@ -190,11 +184,7 @@ const Appointments = () => {
     try {
       const { error } = await supabase
         .from('appointments')
-        .update({
-          ...appointmentForm,
-          reason: appointmentForm.reason || null,
-          notes: appointmentForm.notes || null
-        })
+        .update(appointmentForm)
         .eq('id', selectedAppointment.id);
 
       if (error) throw error;
@@ -271,9 +261,7 @@ const Appointments = () => {
       doctor_id: '',
       appointment_date: new Date().toISOString().split('T')[0],
       appointment_time: '',
-      duration_minutes: 30,
-      reason: '',
-      notes: ''
+      duration_minutes: 30
     });
     setSelectedAppointment(null);
   };
@@ -285,9 +273,7 @@ const Appointments = () => {
       doctor_id: appointment.doctor_id,
       appointment_date: appointment.appointment_date,
       appointment_time: appointment.appointment_time,
-      duration_minutes: appointment.duration_minutes,
-      reason: appointment.reason || '',
-      notes: appointment.notes || ''
+      duration_minutes: appointment.duration_minutes
     });
     setIsEditAppointmentOpen(true);
   };
@@ -312,13 +298,6 @@ const Appointments = () => {
       </Badge>
     );
   };
-
-  const todayAppointments = appointments.filter(app => app.appointment_date === selectedDate);
-  const upcomingAppointments = appointments.filter(app => 
-    new Date(app.appointment_date) > new Date(selectedDate) && 
-    app.status !== 'completed' && 
-    app.status !== 'cancelled'
-  );
 
   if (loading || loadingData) {
     return (
@@ -445,33 +424,12 @@ const Appointments = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="15">15 minuta</SelectItem>
+                      <SelectItem value="20">20 minuta</SelectItem>
                       <SelectItem value="30">30 minuta</SelectItem>
                       <SelectItem value="45">45 minuta</SelectItem>
                       <SelectItem value="60">60 minuta</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="reason">Razlog posete</Label>
-                  <Input
-                    id="reason"
-                    value={appointmentForm.reason}
-                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, reason: e.target.value }))}
-                    placeholder="Kontrolni pregled, simptomi..."
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Napomene</Label>
-                  <Textarea
-                    id="notes"
-                    value={appointmentForm.notes}
-                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Dodatne napomene..."
-                    rows={3}
-                  />
                 </div>
                 
                 <Button onClick={createAppointment} className="w-full bg-gradient-medical hover:shadow-medical">
@@ -485,11 +443,9 @@ const Appointments = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="today" className="space-y-6">
+        <Tabs defaultValue="all" className="space-y-6">
           <div className="flex items-center justify-between">
             <TabsList>
-              <TabsTrigger value="today">Danas</TabsTrigger>
-              <TabsTrigger value="upcoming">Predstojeći</TabsTrigger>
               <TabsTrigger value="all">Svi termini</TabsTrigger>
             </TabsList>
             
@@ -505,198 +461,12 @@ const Appointments = () => {
             </div>
           </div>
 
-          {/* Today's Appointments */}
-          <TabsContent value="today" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                Termini za {new Date(selectedDate).toLocaleDateString('sr-RS')}
-              </h2>
-              <p className="text-muted-foreground">
-                {todayAppointments.length} zakazanih termina
-              </p>
-            </div>
-
-            <div className="grid gap-4">
-              {todayAppointments.map((appointment) => (
-                <Card key={appointment.id} className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {appointment.patients.first_name} {appointment.patients.last_name}
-                            </h3>
-                            {getStatusBadge(appointment.status)}
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
-                              <span>{appointment.appointment_time} ({appointment.duration_minutes} min)</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <User className="h-4 w-4" />
-                              <span>Dr {appointment.profiles.full_name}</span>
-                            </div>
-                          </div>
-                          
-                          {appointment.reason && (
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                              <span>{appointment.reason}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        {appointment.status === 'scheduled' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                            className="text-primary hover:bg-primary/10"
-                          >
-                            Potvrdi
-                          </Button>
-                        )}
-                        {appointment.status === 'confirmed' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                            className="text-success hover:bg-success/10"
-                          >
-                            Završi
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(appointment)}
-                          className="hover:shadow-card transition-all duration-200"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteAppointment(appointment.id)}
-                          className="hover:shadow-card transition-all duration-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {todayAppointments.length === 0 && (
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-12 text-center">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Nema termina za danas</h3>
-                    <p className="text-muted-foreground">Izaberite drugi datum ili zakažite novi termin.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* Upcoming Appointments */}
-          <TabsContent value="upcoming" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Predstojeći termini</h2>
-              <p className="text-muted-foreground">
-                {upcomingAppointments.length} termina u narednom periodu
-              </p>
-            </div>
-
-            <div className="grid gap-4">
-              {upcomingAppointments.map((appointment) => (
-                <Card key={appointment.id} className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {appointment.patients.first_name} {appointment.patients.last_name}
-                            </h3>
-                            {getStatusBadge(appointment.status)}
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="h-4 w-4" />
-                              <span>{new Date(appointment.appointment_date).toLocaleDateString('sr-RS')}</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
-                              <span>{appointment.appointment_time} ({appointment.duration_minutes} min)</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <User className="h-4 w-4" />
-                              <span>Dr {appointment.profiles.full_name}</span>
-                            </div>
-                          </div>
-                          
-                          {appointment.reason && (
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                              <span>{appointment.reason}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(appointment)}
-                          className="hover:shadow-card transition-all duration-200"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteAppointment(appointment.id)}
-                          className="hover:shadow-card transition-all duration-200"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {upcomingAppointments.length === 0 && (
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-12 text-center">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Nema predstojeće termine</h3>
-                    <p className="text-muted-foreground">Svi termini su završeni ili otkazani.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-
           {/* All Appointments */}
           <TabsContent value="all" className="space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">Svi termini</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                Svi termini
+              </h2>
               <p className="text-muted-foreground">
                 {appointments.length} ukupno termina
               </p>
@@ -733,17 +503,30 @@ const Appointments = () => {
                               <span>Dr {appointment.profiles.full_name}</span>
                             </div>
                           </div>
-                          
-                          {appointment.reason && (
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                              <FileText className="h-4 w-4" />
-                              <span>{appointment.reason}</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                       
                       <div className="flex items-center space-x-2">
+                        {appointment.status === 'scheduled' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                            className="text-primary hover:bg-primary/10"
+                          >
+                            Potvrdi
+                          </Button>
+                        )}
+                        {appointment.status === 'confirmed' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                            className="text-success hover:bg-success/10"
+                          >
+                            Završi
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -753,10 +536,10 @@ const Appointments = () => {
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
                           onClick={() => deleteAppointment(appointment.id)}
-                          className="hover:shadow-card transition-all duration-200"
+                          className="text-destructive hover:bg-destructive/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -765,6 +548,18 @@ const Appointments = () => {
                   </CardContent>
                 </Card>
               ))}
+
+              {appointments.length === 0 && (
+                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                  <CardContent className="p-12 text-center">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">Nema termina</h3>
+                    <p className="text-muted-foreground">
+                      Trenutno nema zakazanih termina. Kliknite na "Zakaži termin" da dodate novi.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -773,15 +568,15 @@ const Appointments = () => {
         <Dialog open={isEditAppointmentOpen} onOpenChange={setIsEditAppointmentOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Uređivanje termina</DialogTitle>
+              <DialogTitle>Ažuriranje termina</DialogTitle>
               <DialogDescription>
-                Ažurirajte podatke o terminu
+                Izmenite podatke termina
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="edit_patient_select">Pacijent</Label>
+                <Label htmlFor="patient_select">Pacijent</Label>
                 <Select value={appointmentForm.patient_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, patient_id: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Izaberite pacijenta" />
@@ -797,7 +592,7 @@ const Appointments = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="edit_doctor_select">Lekar</Label>
+                <Label htmlFor="doctor_select">Lekar</Label>
                 <Select value={appointmentForm.doctor_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, doctor_id: value }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Izaberite lekara" />
@@ -814,18 +609,18 @@ const Appointments = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit_appointment_date">Datum</Label>
+                  <Label htmlFor="appointment_date">Datum</Label>
                   <Input
-                    id="edit_appointment_date"
+                    id="appointment_date"
                     type="date"
                     value={appointmentForm.appointment_date}
                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_date: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit_appointment_time">Vreme</Label>
+                  <Label htmlFor="appointment_time">Vreme</Label>
                   <Input
-                    id="edit_appointment_time"
+                    id="appointment_time"
                     type="time"
                     value={appointmentForm.appointment_time}
                     onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_time: e.target.value }))}
@@ -834,39 +629,18 @@ const Appointments = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="edit_duration">Trajanje (minuti)</Label>
+                <Label htmlFor="duration">Trajanje (minuti)</Label>
                 <Select value={appointmentForm.duration_minutes.toString()} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minuta</SelectItem>
+                    <SelectItem value="20">20 minuta</SelectItem>
                     <SelectItem value="30">30 minuta</SelectItem>
                     <SelectItem value="45">45 minuta</SelectItem>
                     <SelectItem value="60">60 minuta</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit_reason">Razlog posete</Label>
-                <Input
-                  id="edit_reason"
-                  value={appointmentForm.reason}
-                  onChange={(e) => setAppointmentForm(prev => ({ ...prev, reason: e.target.value }))}
-                  placeholder="Kontrolni pregled, simptomi..."
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="edit_notes">Napomene</Label>
-                <Textarea
-                  id="edit_notes"
-                  value={appointmentForm.notes}
-                  onChange={(e) => setAppointmentForm(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Dodatne napomene..."
-                  rows={3}
-                />
               </div>
               
               <Button onClick={updateAppointment} className="w-full bg-gradient-medical hover:shadow-medical">
