@@ -181,7 +181,7 @@ const SpecialistReport = () => {
           body {
             font-family: 'Times New Roman', serif;
             font-size: 16px;
-            line-height: 1.5;
+            line-height: 1.3;
             color: #000;
             margin: 0;
             padding: 0;
@@ -196,8 +196,8 @@ const SpecialistReport = () => {
           
           .header {
             text-align: center;
-            margin-bottom: 35px;
-            padding-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
           }
           
           .title {
@@ -219,12 +219,12 @@ const SpecialistReport = () => {
           
           .patient-info {
             background: #ffffff;
-            padding: 18px;
-            margin-bottom: 25px;
+            padding: 12px;
+            margin-bottom: 18px;
           }
           
           .field {
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
           }
@@ -244,7 +244,7 @@ const SpecialistReport = () => {
           }
           
           .section {
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             border-left: 4px solid #3182ce;
             padding-left: 15px;
             page-break-inside: avoid;
@@ -254,17 +254,17 @@ const SpecialistReport = () => {
             font-weight: 800;
             font-size: 18px;
             color: #1a365d;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             text-transform: uppercase;
             letter-spacing: 1px;
           }
           
           .text-content {
             font-size: 15px;
-            line-height: 1.6;
+            line-height: 1.4;
             color: #2d3748;
             text-align: justify;
-            padding: 8px 0;
+            padding: 4px 0;
             font-weight: 500;
             word-wrap: break-word;
             overflow-wrap: break-word;
@@ -272,8 +272,8 @@ const SpecialistReport = () => {
           
           .lab-results {
             background: #ffffff;
-            padding: 15px;
-            margin: 20px 0;
+            padding: 10px;
+            margin: 12px 0;
           }
           
           .footer {
