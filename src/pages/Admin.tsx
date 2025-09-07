@@ -51,22 +51,12 @@ interface CalendarPermission {
   doctor: { full_name: string; email: string };
 }
 
-interface UserPermission {
-  id: string;
-  user_id: string;
-  permission_type: string;
-  is_granted: boolean;
-  granted_by: string;
-}
-
 const Admin = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [permissions, setPermissions] = useState<CalendarPermission[]>([]);
-  const [userPermissions, setUserPermissions] = useState<UserPermission[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -125,15 +115,6 @@ const Admin = () => {
 
       if (permissionsError) throw permissionsError;
       setPermissions(permissionsData || []);
-
-      // Fetch user permissions
-      const { data: userPermissionsData, error: userPermissionsError } = await supabase
-        .from('user_permissions')
-        .select('*')
-        .order('user_id', { ascending: true });
-
-      if (userPermissionsError) throw userPermissionsError;
-      setUserPermissions(userPermissionsData || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -310,34 +291,6 @@ const Admin = () => {
     }
   };
 
-  const updateUserPermission = async (userId: string, permissionType: string, isGranted: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('user_permissions')
-        .update({ 
-          is_granted: isGranted,
-          granted_by: profile?.id 
-        })
-        .eq('user_id', userId)
-        .eq('permission_type', permissionType);
-
-      if (error) throw error;
-
-      toast({
-        title: "Uspešno",
-        description: `Dozvola je ${isGranted ? 'odobrena' : 'uklonjena'}`,
-      });
-
-      fetchData();
-    } catch (error: any) {
-      toast({
-        title: "Greška",
-        description: error.message || "Nije moguće ažurirati dozvolu",
-        variant: "destructive",
-      });
-    }
-  };
-
   const deletePermission = async (permissionId: string) => {
     try {
       const { error } = await supabase
@@ -425,18 +378,14 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Korisnici</span>
             </TabsTrigger>
-            <TabsTrigger value="user-permissions" className="flex items-center space-x-2">
-              <Shield className="h-4 w-4" />
-              <span>Dozvole korisnika</span>
-            </TabsTrigger>
             <TabsTrigger value="permissions" className="flex items-center space-x-2">
               <Calendar className="h-4 w-4" />
-              <span>Kalendar dozvole</span>
+              <span>Dozvole za kalendare</span>
             </TabsTrigger>
           </TabsList>
 
@@ -631,84 +580,7 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          {/* User Permissions Tab */}
-          <TabsContent value="user-permissions" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">Upravljanje dozvolama korisnika</h2>
-                <p className="text-muted-foreground">Upravljanje dozvolama za pristup različitim funkcionalnostima</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="user_select_permissions">Izaberite korisnika</Label>
-                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                  <SelectTrigger className="w-[280px]">
-                    <SelectValue placeholder="Izaberite korisnika za upravljanje dozvolama" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {nonAdminUsers.map(user => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.full_name} ({getRoleText(user.role)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* User Permissions List */}
-            {selectedUserId && (
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle>Dozvole korisnika</CardTitle>
-                  <CardDescription>
-                    Upravljajte dozvolama za izabranog korisnika
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {[
-                    { type: 'view_patients', label: 'Pregled pacijenata', description: 'Mogućnost pregleda liste pacijenata' },
-                    { type: 'edit_patients', label: 'Upravljanje pacijentima', description: 'Dodavanje, ažuriranje i uklanjanje pacijenata' },
-                    { type: 'delete_patients', label: 'Brisanje pacijenata', description: 'Uklanjanje pacijenata iz sistema' },
-                    { type: 'view_appointments', label: 'Pregled termina', description: 'Mogućnost pregleda termina' },
-                    { type: 'edit_appointments', label: 'Upravljanje terminima', description: 'Zakazivanje i ažuriranje termina' },
-                    { type: 'delete_appointments', label: 'Brisanje termina', description: 'Otkazivanje i brisanje termina' },
-                    { type: 'manage_users', label: 'Upravljanje korisnicima', description: 'Administracija korisnika sistema' },
-                    { type: 'view_reports', label: 'Pregled izveštaja', description: 'Pristup sistemskim izveštajima' }
-                  ].map((permission) => {
-                    const userPermission = userPermissions.find(
-                      p => p.user_id === selectedUserId && p.permission_type === permission.type
-                    );
-                    
-                    return (
-                      <div key={permission.type} className="flex items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-foreground">{permission.label}</h4>
-                          <p className="text-sm text-muted-foreground">{permission.description}</p>
-                        </div>
-                        <Switch
-                          checked={userPermission?.is_granted || false}
-                          onCheckedChange={(checked) => updateUserPermission(selectedUserId, permission.type, checked)}
-                        />
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
-
-            {!selectedUserId && (
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-12 text-center">
-                  <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Izaberite korisnika</h3>
-                  <p className="text-muted-foreground">Izaberite korisnika da biste upravljali njegovim dozvolama.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Calendar Permissions Tab */}
+          {/* Permissions Tab */}
           <TabsContent value="permissions" className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
