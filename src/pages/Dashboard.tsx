@@ -14,7 +14,8 @@ import {
   LogOut, 
   Activity,
   UserPlus,
-  Bell
+  Bell,
+  FileText
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -188,6 +189,23 @@ const Dashboard = () => {
                 <div>
                   <CardTitle className="text-lg">Kalendar termina</CardTitle>
                   <CardDescription>Zakaži i upravljaj terminima</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card 
+            className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-elevated transition-all duration-200 cursor-pointer group"
+            onClick={() => navigate('/specialist-report')}
+          >
+            <CardHeader>
+              <div className="flex items-center space-x-3">
+                <div className="bg-accent/10 p-3 rounded-lg group-hover:bg-accent/20 transition-colors duration-200">
+                  <FileText className="h-6 w-6 text-accent-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Specijalistički izvještaj</CardTitle>
+                  <CardDescription>Kreiraj i štampaj izvještaje</CardDescription>
                 </div>
               </div>
             </CardHeader>
