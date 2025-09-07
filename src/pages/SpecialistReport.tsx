@@ -159,7 +159,7 @@ const SpecialistReport = () => {
         <style>
           @page {
             size: A4;
-            margin: 2cm 1cm 1cm 1cm;
+            margin: 2.3in 1in 1in 0.8in;
           }
           
           body {
