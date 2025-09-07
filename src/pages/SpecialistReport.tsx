@@ -283,7 +283,6 @@ const SpecialistReport = () => {
             }
             .document {
               box-shadow: none;
-              border: 2px solid #1a365d;
               min-height: auto;
             }
           }
