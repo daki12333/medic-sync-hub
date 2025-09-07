@@ -16,6 +16,7 @@ interface Patient {
   first_name: string;
   last_name: string;
   date_of_birth: string;
+  phone: string;
 }
 
 interface Doctor {
@@ -27,6 +28,7 @@ interface Doctor {
 interface ReportData {
   patient_name: string;
   patient_dob: string;
+  patient_phone: string;
   exam_date: string;
   anamnesis: string;
   objective_findings: string;
@@ -52,6 +54,7 @@ const SpecialistReport = () => {
   const [reportData, setReportData] = useState<ReportData>({
     patient_name: '',
     patient_dob: '',
+    patient_phone: '',
     exam_date: new Date().toISOString().split('T')[0],
     anamnesis: '',
     objective_findings: '',
@@ -78,7 +81,7 @@ const SpecialistReport = () => {
       // Fetch patients
       const { data: patientsData, error: patientsError } = await supabase
         .from('patients')
-        .select('id, first_name, last_name, date_of_birth')
+        .select('id, first_name, last_name, date_of_birth, phone')
         .eq('is_active', true)
         .order('first_name');
 
@@ -125,7 +128,8 @@ const SpecialistReport = () => {
     setReportData(prev => ({
       ...prev,
       patient_name: `${patient.first_name} ${patient.last_name}`,
-      patient_dob: patient.date_of_birth || ''
+      patient_dob: patient.date_of_birth || '',
+      patient_phone: patient.phone || ''
     }));
     setShowPatientSuggestions(false);
     setShowAddNewPatient(false);
@@ -155,7 +159,7 @@ const SpecialistReport = () => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Specijalistički Izvještaj</title>
+        <title>Specijalistički Izveštaj</title>
         <style>
           @page {
             size: A4;
@@ -164,7 +168,7 @@ const SpecialistReport = () => {
           
           body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.4;
             color: #000;
             margin: 0;
@@ -232,13 +236,23 @@ const SpecialistReport = () => {
       </head>
       <body>
         <div class="header">
-          <div class="title">SPECIJALISTIČKI IZVJEŠTAJ</div>
+          <div class="title">SPECIJALISTIČKI IZVEŠTAJ</div>
         </div>
         
         <div class="field">
           <span class="field-label">Ime i prezime pacijenta:</span>
           <span class="field-value">${reportData.patient_name}</span>
         </div>
+        
+        ${reportData.patient_dob ? `<div class="field">
+          <span class="field-label">Datum rođenja:</span>
+          <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</span>
+        </div>` : ''}
+        
+        ${reportData.patient_phone ? `<div class="field">
+          <span class="field-label">Telefon:</span>
+          <span class="field-value">${reportData.patient_phone}</span>
+        </div>` : ''}
         
         <div class="field">
           <span class="field-label">Datum pregleda:</span>
@@ -266,20 +280,11 @@ const SpecialistReport = () => {
         </div>
         
         <div class="text-field">
-          <div class="field-label">Kontrola sa pregledom stolice mikološki.</div>
-        </div>
-        
-        <div class="text-field">
-          <div class="field-label">Eho abd</div>
-        </div>
-        
-        <div class="text-field">
           <div class="text-content">${reportData.lab_results || ''}</div>
         </div>
         
         <div class="footer">
           <p><strong>Lekar:</strong> ${reportData.doctor_name}</p>
-          ${reportData.doctor_specialization ? `<p><strong>Specijalnost:</strong> ${reportData.doctor_specialization}</p>` : ''}
         </div>
       </body>
       </html>
@@ -309,13 +314,13 @@ const SpecialistReport = () => {
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-3xl font-bold">Specijalistički Izvještaj</h1>
+          <h1 className="text-3xl font-bold">Specijalistički Izveštaj</h1>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Kreiranje Izvještaja</CardTitle>
+          <CardTitle>Kreiranje Izveštaja</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Patient Selection */}
@@ -360,14 +365,14 @@ const SpecialistReport = () => {
             )}
           </div>
 
-          {/* Date of Birth */}
+          {/* Phone Number */}
           <div className="space-y-2">
-            <Label htmlFor="dob">Datum rođenja</Label>
+            <Label htmlFor="phone">Broj telefona</Label>
             <Input
-              id="dob"
-              type="date"
-              value={reportData.patient_dob}
-              onChange={(e) => setReportData(prev => ({ ...prev, patient_dob: e.target.value }))}
+              id="phone"
+              value={reportData.patient_phone}
+              onChange={(e) => setReportData(prev => ({ ...prev, patient_phone: e.target.value }))}
+              placeholder="Broj telefona"
             />
           </div>
 
@@ -467,7 +472,7 @@ const SpecialistReport = () => {
               className="flex items-center space-x-2"
             >
               <Printer className="h-4 w-4" />
-              <span>Štampaj Izvještaj</span>
+              <span>Štampaj Izveštaj</span>
             </Button>
           </div>
         </CardContent>
