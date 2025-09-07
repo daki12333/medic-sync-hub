@@ -68,9 +68,7 @@ const Admin = () => {
     password: '',
     full_name: '',
     role: 'nurse' as Profile['role'],
-    phone: '',
-    specialization: '',
-    license_number: ''
+    phone: ''
   });
 
   const [permissionForm, setPermissionForm] = useState({
@@ -136,9 +134,7 @@ const Admin = () => {
         email: newUser.email,
         full_name: newUser.full_name,
         role: newUser.role,
-        phone: newUser.phone,
-        specialization: newUser.specialization,
-        license_number: newUser.license_number
+        phone: newUser.phone
       });
 
       // Call Edge Function to create user
@@ -149,8 +145,6 @@ const Admin = () => {
           full_name: newUser.full_name,
           role: newUser.role,
           phone: newUser.phone || null,
-          specialization: newUser.specialization || null,
-          license_number: newUser.license_number || null,
         }
       });
 
@@ -176,9 +170,7 @@ const Admin = () => {
         password: '',
         full_name: '',
         role: 'nurse',
-        phone: '',
-        specialization: '',
-        license_number: ''
+        phone: ''
       });
       
       fetchData();
@@ -473,25 +465,6 @@ const Admin = () => {
                     
                     {(newUser.role === 'doctor' || newUser.role === 'nurse') && (
                       <>
-                        <div className="space-y-2">
-                          <Label htmlFor="specialization">Specijalizacija</Label>
-                          <Input
-                            id="specialization"
-                            value={newUser.specialization}
-                            onChange={(e) => setNewUser(prev => ({ ...prev, specialization: e.target.value }))}
-                            placeholder="Opšta medicina"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="license_number">Broj licence</Label>
-                          <Input
-                            id="license_number"
-                            value={newUser.license_number}
-                            onChange={(e) => setNewUser(prev => ({ ...prev, license_number: e.target.value }))}
-                            placeholder="LK123456"
-                          />
-                        </div>
                       </>
                     )}
                     
