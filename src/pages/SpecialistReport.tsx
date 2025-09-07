@@ -167,206 +167,124 @@ const SpecialistReport = () => {
           }
           
           body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 16px;
-            line-height: 1.5;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
             color: #000;
             margin: 0;
-            padding: 25px;
-            background: #fff;
-          }
-          
-          .document-container {
-            border: 2px solid #2c3e50;
-            padding: 30px;
-            min-height: calc(100vh - 50px);
-            position: relative;
+            padding: 20px;
           }
           
           .header {
             text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 3px double #2c3e50;
-            padding-bottom: 25px;
+            margin-bottom: 30px;
           }
           
           .title {
-            font-size: 26px;
+            font-size: 18px;
             font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            color: #2c3e50;
-            text-transform: uppercase;
-            font-family: 'Times New Roman', Times, serif;
-          }
-          
-          .subtitle {
-            font-size: 14px;
-            color: #5a6c7d;
-            font-style: italic;
-            margin-top: 10px;
-          }
-          
-          .patient-info {
-            background: #f8f9fa;
-            border-left: 4px solid #3498db;
-            padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 5px;
+            margin-bottom: 20px;
+            text-decoration: underline;
           }
           
           .field {
-            margin-bottom: 18px;
-            display: flex;
-            align-items: flex-start;
+            margin-bottom: 15px;
           }
           
           .field-label {
             font-weight: bold;
             display: inline-block;
-            width: 180px;
-            font-size: 17px;
-            color: #2c3e50;
-            flex-shrink: 0;
+            width: 150px;
           }
           
           .field-value {
             display: inline-block;
-            font-size: 17px;
-            font-weight: 500;
-          }
-          
-          .section-divider {
-            border-top: 1px solid #bdc3c7;
-            margin: 30px 0 25px 0;
           }
           
           .text-field {
-            margin-bottom: 25px;
-            border-left: 3px solid #e74c3c;
-            padding-left: 15px;
+            margin-bottom: 20px;
           }
           
           .text-field .field-label {
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             display: block;
-            font-size: 18px;
-            color: #2c3e50;
-            text-transform: uppercase;
-            letter-spacing: 1px;
           }
           
           .text-content {
             text-align: justify;
             margin-bottom: 15px;
-            min-height: 50px;
-            font-size: 16px;
-            line-height: 1.6;
-            padding: 10px;
-            background: #fdfdfd;
-            border-radius: 3px;
+            min-height: 40px;
+          }
+          
+          .therapy-item {
+            margin-left: 40px;
+            margin-bottom: 5px;
           }
           
           .footer {
-            margin-top: 50px;
-            text-align: right;
-            border-top: 2px solid #2c3e50;
-            padding-top: 25px;
-            font-size: 17px;
-          }
-          
-          .doctor-signature {
             margin-top: 40px;
-            text-align: right;
-          }
-          
-          .signature-line {
-            border-bottom: 2px solid #2c3e50;
-            width: 250px;
-            margin: 20px 0 10px auto;
-          }
-          
-          .doctor-name {
-            font-weight: bold;
-            font-size: 18px;
-            color: #2c3e50;
+            text-align: left;
           }
           
           @media print {
             body {
               padding: 0;
             }
-            .document-container {
-              border: 2px solid #2c3e50;
-              padding: 30px;
-              min-height: auto;
-            }
           }
         </style>
       </head>
       <body>
-        <div class="document-container">
-          <div class="header">
-            <div class="title">SPECIJALISTIČKI IZVEŠTAJ</div>
-            <div class="subtitle">Medicinski izveštaj o stanju pacijenta</div>
-          </div>
-          
-          <div class="patient-info">
-            <div class="field">
-              <span class="field-label">Ime i prezime pacijenta:</span>
-              <span class="field-value">${reportData.patient_name}</span>
-            </div>
-            
-            ${reportData.patient_dob ? `<div class="field">
-              <span class="field-label">Datum rođenja:</span>
-              <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</span>
-            </div>` : ''}
-            
-            ${reportData.patient_phone ? `<div class="field">
-              <span class="field-label">Telefon:</span>
-              <span class="field-value">${reportData.patient_phone}</span>
-            </div>` : ''}
-            
-            <div class="field">
-              <span class="field-label">Datum pregleda:</span>
-              <span class="field-value">${new Date(reportData.exam_date).toLocaleDateString('sr-RS')}</span>
-            </div>
-          </div>
-          
-          <div class="section-divider"></div>
-          
-          <div class="text-field">
-            <div class="field-label">Anamneza</div>
-            <div class="text-content">${reportData.anamnesis || ''}</div>
-          </div>
-          
-          <div class="text-field">
-            <div class="field-label">Objektivni nalaz</div>
-            <div class="text-content">${reportData.objective_findings || ''}</div>
-          </div>
-          
-          <div class="text-field">
-            <div class="field-label">Dijagnoza</div>
-            <div class="text-content">${reportData.diagnosis || ''}</div>
-          </div>
-          
-          <div class="text-field">
-            <div class="field-label">Terapija</div>
-            <div class="text-content">${reportData.therapy || ''}</div>
-          </div>
-          
-          <div class="text-field">
-            <div class="field-label">Laboratorijski nalazi</div>
-            <div class="text-content">${reportData.lab_results || ''}</div>
-          </div>
-          
-          <div class="footer">
-            <div class="doctor-signature">
-              <div class="signature-line"></div>
-              <div class="doctor-name">${reportData.doctor_name}</div>
-            </div>
-          </div>
+        <div class="header">
+          <div class="title">SPECIJALISTIČKI IZVEŠTAJ</div>
+        </div>
+        
+        <div class="field">
+          <span class="field-label">Ime i prezime pacijenta:</span>
+          <span class="field-value">${reportData.patient_name}</span>
+        </div>
+        
+        ${reportData.patient_dob ? `<div class="field">
+          <span class="field-label">Datum rođenja:</span>
+          <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</span>
+        </div>` : ''}
+        
+        ${reportData.patient_phone ? `<div class="field">
+          <span class="field-label">Telefon:</span>
+          <span class="field-value">${reportData.patient_phone}</span>
+        </div>` : ''}
+        
+        <div class="field">
+          <span class="field-label">Datum pregleda:</span>
+          <span class="field-value">${new Date(reportData.exam_date).toLocaleDateString('sr-RS')}</span>
+        </div>
+        
+        <div class="text-field">
+          <div class="field-label">Anamneza:</div>
+          <div class="text-content">${reportData.anamnesis || ''}</div>
+        </div>
+        
+        <div class="text-field">
+          <div class="field-label">Objektivni nalaz:</div>
+          <div class="text-content">${reportData.objective_findings || ''}</div>
+        </div>
+        
+        <div class="text-field">
+          <div class="field-label">Dijagnoza:</div>
+          <div class="text-content">${reportData.diagnosis || ''}</div>
+        </div>
+        
+        <div class="text-field">
+          <div class="field-label">Terapija:</div>
+          <div class="text-content">${reportData.therapy || ''}</div>
+        </div>
+        
+        <div class="text-field">
+          <div class="text-content">${reportData.lab_results || ''}</div>
+        </div>
+        
+        <div class="footer">
+          <p><strong>Lekar:</strong> ${reportData.doctor_name}</p>
         </div>
       </body>
       </html>
