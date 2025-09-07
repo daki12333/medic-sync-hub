@@ -166,6 +166,18 @@ const SpecialistReport = () => {
             margin: 1.8in 0.8in 0.8in 0.8in;
           }
           
+          @page :first {
+            margin: 1.8in 0.8in 0.8in 0.8in;
+          }
+          
+          @page :left {
+            margin: 1.8in 0.8in 0.8in 0.8in;
+          }
+          
+          @page :right {
+            margin: 1.8in 0.8in 0.8in 0.8in;
+          }
+          
           body {
             font-family: 'Times New Roman', serif;
             font-size: 16px;
