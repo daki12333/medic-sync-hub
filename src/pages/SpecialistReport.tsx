@@ -236,6 +236,7 @@ const SpecialistReport = () => {
             margin-bottom: 25px;
             border-left: 4px solid #3182ce;
             padding-left: 15px;
+            page-break-inside: avoid;
           }
           
           .section-title {
@@ -252,9 +253,10 @@ const SpecialistReport = () => {
             line-height: 1.6;
             color: #2d3748;
             text-align: justify;
-            min-height: 35px;
             padding: 8px 0;
             font-weight: 500;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
           
           .lab-results {
