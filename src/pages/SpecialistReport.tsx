@@ -274,6 +274,8 @@ const SpecialistReport = () => {
             background: #ffffff;
             padding: 10px;
             margin: 12px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           
           .footer {
@@ -284,7 +286,6 @@ const SpecialistReport = () => {
             background: #ffffff;
             padding: 20px 0;
             text-align: right;
-            border-top: 1px solid #f0f0f0;
           }
           
           .signature-line {
