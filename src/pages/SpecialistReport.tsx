@@ -163,19 +163,19 @@ const SpecialistReport = () => {
         <style>
           @page {
             size: A4;
-            margin: 1.8in 0.8in 0.8in 0.8in;
+            margin: 1.5in 0.8in 0.8in 0.8in;
           }
           
           @page :first {
-            margin: 1.8in 0.8in 0.8in 0.8in;
+            margin: 1.5in 0.8in 0.8in 0.8in;
           }
           
           @page :left {
-            margin: 1.8in 0.8in 0.8in 0.8in;
+            margin: 1.5in 0.8in 0.8in 0.8in;
           }
           
           @page :right {
-            margin: 1.8in 0.8in 0.8in 0.8in;
+            margin: 1.5in 0.8in 0.8in 0.8in;
           }
           
           body {
