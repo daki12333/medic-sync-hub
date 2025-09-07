@@ -18,20 +18,14 @@ import {
 } from 'lucide-react';
 
 interface DashboardStats {
-  todayAppointments: number;
   totalPatients: number;
-  lowStockItems: number;
-  pendingAppointments: number;
 }
 
 const Dashboard = () => {
   const { user, profile, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
-    todayAppointments: 0,
-    totalPatients: 0,
-    lowStockItems: 0,
-    pendingAppointments: 0
+    totalPatients: 0
   });
 
   useEffect(() => {
@@ -44,36 +38,14 @@ const Dashboard = () => {
       if (!user) return;
 
       try {
-        // Today's appointments
-        const today = new Date().toISOString().split('T')[0];
-        const { count: todayCount } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('appointment_date', today);
-
         // Total patients
         const { count: patientsCount } = await supabase
           .from('patients')
           .select('*', { count: 'exact', head: true })
           .eq('is_active', true);
 
-        // Low stock items
-        const { data: lowStock } = await supabase
-          .from('inventory_items')
-          .select('current_stock, min_stock_level')
-          .filter('current_stock', 'lte', 'min_stock_level');
-
-        // Pending appointments
-        const { count: pendingCount } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'scheduled');
-
         setStats({
-          todayAppointments: todayCount || 0,
-          totalPatients: patientsCount || 0,
-          lowStockItems: 0,
-          pendingAppointments: pendingCount || 0
+          totalPatients: patientsCount || 0
         });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -170,20 +142,7 @@ const Dashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Današnji pregledi</CardTitle>
-              <Calendar className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.todayAppointments}</div>
-              <p className="text-xs text-muted-foreground">
-                zakazanih za danas
-              </p>
-            </CardContent>
-          </Card>
-
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8 max-w-md">
           <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Ukupno pacijenata</CardTitle>
@@ -193,20 +152,6 @@ const Dashboard = () => {
               <div className="text-2xl font-bold text-foreground">{stats.totalPatients}</div>
               <p className="text-xs text-muted-foreground">
                 aktivnih pacijenata
-              </p>
-            </CardContent>
-          </Card>
-
-
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Na čekanju</CardTitle>
-              <ClipboardList className="h-4 w-4 text-accent-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stats.pendingAppointments}</div>
-              <p className="text-xs text-muted-foreground">
-                termina za potvrdu
               </p>
             </CardContent>
           </Card>
