@@ -177,11 +177,8 @@ const SpecialistReport = () => {
           }
           
           .document {
-            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+            background: #ffffff;
             padding: 25px;
-            border: 3px solid #1a365d;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(26, 54, 93, 0.15);
             min-height: calc(100vh - 50px);
           }
           
@@ -210,9 +207,7 @@ const SpecialistReport = () => {
           }
           
           .patient-info {
-            background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
-            border: 2px solid #3182ce;
-            border-radius: 6px;
+            background: #ffffff;
             padding: 18px;
             margin-bottom: 25px;
           }
@@ -263,9 +258,7 @@ const SpecialistReport = () => {
           }
           
           .lab-results {
-            background: linear-gradient(135deg, #fff7ed 0%, #fffbf7 100%);
-            border: 2px solid #ed8936;
-            border-radius: 6px;
+            background: #ffffff;
             padding: 15px;
             margin: 20px 0;
           }
@@ -424,17 +417,6 @@ const SpecialistReport = () => {
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Phone Number */}
-          <div className="space-y-2">
-            <Label htmlFor="phone">Broj telefona</Label>
-            <Input
-              id="phone"
-              value={reportData.patient_phone}
-              onChange={(e) => setReportData(prev => ({ ...prev, patient_phone: e.target.value }))}
-              placeholder="Broj telefona"
-            />
           </div>
 
           {/* Exam Date */}
