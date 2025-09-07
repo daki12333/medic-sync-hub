@@ -190,7 +190,7 @@ const SpecialistReport = () => {
           
           .document {
             background: #ffffff;
-            padding: 25px 25px 120px 25px;
+            padding: 25px 25px 60px 25px;
             min-height: calc(100vh - 50px);
           }
           
@@ -280,12 +280,13 @@ const SpecialistReport = () => {
           
           .footer {
             position: fixed;
-            bottom: 2cm;
+            bottom: 1cm;
             right: 25px;
             left: 25px;
             background: #ffffff;
-            padding: 20px 0;
+            padding: 8px 0;
             text-align: right;
+            height: auto;
           }
           
           .signature-line {
