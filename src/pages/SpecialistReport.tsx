@@ -185,7 +185,6 @@ const SpecialistReport = () => {
           .header {
             text-align: center;
             margin-bottom: 35px;
-            border-bottom: 2px solid #1a365d;
             padding-bottom: 20px;
           }
           
@@ -268,8 +267,14 @@ const SpecialistReport = () => {
           .footer {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 2px solid #1a365d;
             text-align: right;
+          }
+          
+          .signature-line {
+            border-bottom: 1px solid #000;
+            width: 200px;
+            margin: 20px 0 10px auto;
+            height: 20px;
           }
           
           .doctor-signature {
@@ -294,7 +299,6 @@ const SpecialistReport = () => {
         <div class="document">
           <div class="header">
             <div class="title">SPECIJALISTIČKI IZVEŠTAJ</div>
-            <div class="subtitle">Medicinski dokument</div>
           </div>
           
           <div class="patient-info">
@@ -335,6 +339,7 @@ const SpecialistReport = () => {
           </div>` : ''}
           
           <div class="footer">
+            <div class="signature-line"></div>
             <div class="doctor-signature">
               Lekar: ${reportData.doctor_name}
               ${reportData.doctor_specialization ? `<br><span style="font-size: 14px; font-weight: 500; color: #4a5568;">${reportData.doctor_specialization}</span>` : ''}
