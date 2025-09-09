@@ -218,3 +218,5 @@ body {
 .shadow-float-lg {
   box-shadow: 0 20px 50px -12px hsl(var(--primary) / 0.25), 0 15px 15px -5px hsl(var(--primary) / 0.04);
 }
+
+}
