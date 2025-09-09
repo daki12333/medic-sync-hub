@@ -216,10 +216,10 @@ const Patients = () => {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
-              variant="ghost"
+              variant="floating"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="hover:shadow-card transition-all duration-200"
+              className="btn-float"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Nazad
@@ -237,7 +237,7 @@ const Patients = () => {
           
           <Dialog open={isCreatePatientOpen} onOpenChange={setIsCreatePatientOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-medical hover:shadow-medical">
+              <Button variant="premium" className="btn-float">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Dodaj pacijenta
               </Button>
@@ -321,12 +321,17 @@ const Patients = () => {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+          <Card className="glass glass-hover border-border/20 shadow-glass">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Ukupno pacijenata</CardTitle>
+              <CardTitle className="text-sm font-medium flex items-center space-x-2">
+                <div className="p-1 bg-primary/10 rounded-md">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <span>Ukupno pacijenata</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{patients.length}</div>
+              <div className="text-3xl font-bold bg-gradient-medical bg-clip-text text-transparent">{patients.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -334,9 +339,12 @@ const Patients = () => {
         {/* Patients List */}
         <div className="space-y-4">
           {filteredPatients.length === 0 ? (
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-8 text-center">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <Card className="card-professional shadow-glass border-border/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-card opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+              <CardContent className="p-8 text-center relative z-10">
+                <div className="p-4 bg-muted/20 rounded-full w-fit mx-auto mb-4 group-hover:bg-primary/10 transition-colors duration-300">
+                  <Users className="h-12 w-12 text-muted-foreground group-hover:text-primary transition-colors duration-300" />
+                </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Nema pacijenata</h3>
                 <p className="text-muted-foreground mb-4">
                   {searchQuery ? 'Nema rezultata za zadatu pretragu.' : 'Još uvek niste dodali nijednog pacijenta.'}
@@ -344,7 +352,8 @@ const Patients = () => {
                 {!searchQuery && (
                   <Button 
                     onClick={() => setIsCreatePatientOpen(true)}
-                    className="bg-gradient-medical hover:shadow-medical"
+                    variant="premium"
+                    className="btn-float"
                   >
                     <UserPlus className="h-4 w-4 mr-2" />
                     Dodaj prvog pacijenta
@@ -354,28 +363,29 @@ const Patients = () => {
             </Card>
           ) : (
             filteredPatients.map((patient) => (
-              <Card key={patient.id} className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-                <CardContent className="p-6">
+              <Card key={patient.id} className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <CardContent className="p-6 relative z-10">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-3">
-                        <h3 className="text-lg font-semibold text-foreground">
+                        <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
                           {patient.first_name} {patient.last_name}
                         </h3>
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 group-hover:bg-primary/20 transition-all duration-300">
                           Aktivan
                         </Badge>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-muted-foreground">
                         {patient.date_of_birth && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 group-hover:text-primary/70 transition-colors duration-300">
                             <Calendar className="h-4 w-4" />
                             <span>Rođen: {new Date(patient.date_of_birth).toLocaleDateString('sr-RS')}</span>
                           </div>
                         )}
                         {patient.phone && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 group-hover:text-primary/70 transition-colors duration-300">
                             <Phone className="h-4 w-4" />
                             <span>{patient.phone}</span>
                           </div>
@@ -385,18 +395,18 @@ const Patients = () => {
                     
                     <div className="flex space-x-2 ml-4">
                       <Button
-                        variant="outline"
+                        variant="glass"
                         size="sm"
                         onClick={() => openEditDialog(patient)}
-                        className="hover:shadow-card transition-all duration-200"
+                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="outline"
+                        variant="glass"
                         size="sm"
                         onClick={() => deletePatient(patient.id)}
-                        className="hover:shadow-card transition-all duration-200 text-destructive hover:text-destructive"
+                        className="hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

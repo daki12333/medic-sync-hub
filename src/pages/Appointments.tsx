@@ -317,10 +317,10 @@ const Appointments = () => {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button
-              variant="ghost"
+              variant="floating"
               size="sm"
               onClick={() => navigate('/dashboard')}
-              className="hover:shadow-card transition-all duration-200"
+              className="btn-float"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Nazad
@@ -338,7 +338,7 @@ const Appointments = () => {
           
           <Dialog open={isCreateAppointmentOpen} onOpenChange={setIsCreateAppointmentOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-medical hover:shadow-medical">
+              <Button variant="premium" className="btn-float">
                 <Plus className="h-4 w-4 mr-2" />
                 Zakaži termin
               </Button>
@@ -474,16 +474,17 @@ const Appointments = () => {
 
             <div className="grid gap-4">
               {appointments.map((appointment) => (
-                <Card key={appointment.id} className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-                  <CardContent className="p-6">
+                <Card key={appointment.id} className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <CardContent className="p-6 relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
+                        <div className="bg-primary/10 p-3 rounded-full group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
                           <Calendar className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="text-lg font-semibold text-foreground">
+                            <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
                               {appointment.patients.first_name} {appointment.patients.last_name}
                             </h3>
                             {getStatusBadge(appointment.status)}

@@ -39,12 +39,12 @@ const Index = () => {
                 <span className="text-sm text-foreground">
                   Dobrodošli, {profile?.full_name?.split(' ')[0] || 'Korisnik'}
                 </span>
-                <Button onClick={() => navigate('/dashboard')} className="bg-gradient-medical hover:shadow-medical">
+              <Button variant="premium" onClick={() => navigate('/dashboard')} className="btn-float">
                   Kontrolna tabla
                 </Button>
               </div>
             ) : (
-              <Button onClick={() => navigate('/auth')} className="bg-gradient-medical hover:shadow-medical">
+              <Button variant="premium" onClick={() => navigate('/auth')} className="btn-float">
                 Prijavite se
               </Button>
             )}
@@ -78,16 +78,17 @@ const Index = () => {
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <Button 
                   onClick={handleGetStarted}
+                  variant="premium"
                   size="lg"
-                  className="bg-gradient-medical hover:shadow-medical transition-all duration-300 text-lg px-8 py-6"
+                  className="text-lg px-8 py-6 btn-float shadow-medical"
                 >
                   <Activity className="h-5 w-5 mr-2" />
                   {user ? 'Idite na kontrolnu tablu' : 'Počnite odmah'}
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="floating" 
                   size="lg"
-                  className="border-primary/20 hover:bg-primary/5 text-lg px-8 py-6 transition-all duration-300"
+                  className="text-lg px-8 py-6"
                 >
                   <Shield className="h-5 w-5 mr-2" />
                   Saznajte više
@@ -122,49 +123,52 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-elevated transition-all duration-300 group">
-              <CardHeader>
+            <Card className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-medical opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+              <CardHeader className="relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 transition-colors duration-300">
+                  <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
                     <Calendar className="h-6 w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-xl">Zakazivanje pregleda</CardTitle>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">Zakazivanje pregleda</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">
+              <CardContent className="relative z-10">
+                <CardDescription className="text-base group-hover:text-primary/70 transition-colors duration-300">
                   Jednostavno upravljanje terminima, automatska obaveštenja i pregled rasporedâ lekara.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-elevated transition-all duration-300 group">
-              <CardHeader>
+            <Card className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-success/10 to-success/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-success/10 p-3 rounded-xl group-hover:bg-success/20 transition-colors duration-300">
+                  <div className="bg-success/10 p-3 rounded-xl group-hover:bg-success/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
                     <Users className="h-6 w-6 text-success" />
                   </div>
-                  <CardTitle className="text-xl">Upravljanje pacijentima</CardTitle>
+                  <CardTitle className="text-xl group-hover:text-success transition-colors duration-300">Upravljanje pacijentima</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">
+              <CardContent className="relative z-10">
+                <CardDescription className="text-base group-hover:text-success/70 transition-colors duration-300">
                   Kompletni medicinski kartoni, istorija bolesti i praćenje tretmana pacijenata.
                 </CardDescription>
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-elevated transition-all duration-300 group">
-              <CardHeader>
+            <Card className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-warning/10 to-warning/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <CardHeader className="relative z-10">
                 <div className="flex items-center space-x-3">
-                  <div className="bg-warning/10 p-3 rounded-xl group-hover:bg-warning/20 transition-colors duration-300">
+                  <div className="bg-warning/10 p-3 rounded-xl group-hover:bg-warning/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
                     <Package className="h-6 w-6 text-warning" />
                   </div>
-                  <CardTitle className="text-xl">Medicinske zalihe</CardTitle>
+                  <CardTitle className="text-xl group-hover:text-warning transition-colors duration-300">Medicinske zalihe</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">
+              <CardContent className="relative z-10">
+                <CardDescription className="text-base group-hover:text-warning/70 transition-colors duration-300">
                   Praćenje inventara lekova i medicinske opreme sa automatskim upozorenjem za niske zalihe.
                 </CardDescription>
               </CardContent>
