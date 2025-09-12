@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
 import {
   Calendar,
   Plus,
@@ -352,33 +353,14 @@ const Appointments = () => {
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="patient_select">Pacijent</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/patients')}
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Dodaj novog
-                    </Button>
-                  </div>
-                  <Select value={appointmentForm.patient_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, patient_id: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Izaberite pacijenta" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patients.map(patient => (
-                        <SelectItem key={patient.id} value={patient.id}>
-                          {patient.first_name} {patient.last_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <PatientSearchDropdown
+                  value={appointmentForm.patient_id}
+                  onValueChange={(patientId) => setAppointmentForm(prev => ({ ...prev, patient_id: patientId }))}
+                  onAddNewPatient={() => {
+                    setIsCreateAppointmentOpen(false);
+                    navigate('/patients');
+                  }}
+                />
                 
                 <div className="space-y-2">
                   <Label htmlFor="doctor_select">Lekar</Label>
@@ -386,7 +368,7 @@ const Appointments = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Izaberite lekara" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border border-border z-[100]">
                       {doctors.map(doctor => (
                         <SelectItem key={doctor.id} value={doctor.id}>
                           {doctor.full_name} ({doctor.specialization})
@@ -576,21 +558,14 @@ const Appointments = () => {
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="patient_select">Pacijent</Label>
-                <Select value={appointmentForm.patient_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, patient_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Izaberite pacijenta" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map(patient => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.first_name} {patient.last_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <PatientSearchDropdown
+                value={appointmentForm.patient_id}
+                onValueChange={(patientId) => setAppointmentForm(prev => ({ ...prev, patient_id: patientId }))}
+                onAddNewPatient={() => {
+                  setIsEditAppointmentOpen(false);
+                  navigate('/patients');
+                }}
+              />
               
               <div className="space-y-2">
                 <Label htmlFor="doctor_select">Lekar</Label>
@@ -598,7 +573,7 @@ const Appointments = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Izaberite lekara" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border border-border z-[100]">
                     {doctors.map(doctor => (
                       <SelectItem key={doctor.id} value={doctor.id}>
                         {doctor.full_name} ({doctor.specialization})
