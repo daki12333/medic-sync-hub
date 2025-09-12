@@ -1,32 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import Sidebar from '@/components/Sidebar';
 import { 
-  Calendar, 
-  Users, 
-  Package, 
-  ClipboardList, 
-  Settings, 
-  LogOut, 
   Activity,
-  UserPlus,
+  Users,
+  Calendar,
+  FileText,
+  TrendingUp,
+  Clock,
+  Sun,
+  Moon,
   Bell,
-  FileText
+  Search,
+  Filter
 } from 'lucide-react';
 
 interface DashboardStats {
   totalPatients: number;
+  todayAppointments: number;
+  pendingReports: number;
+  activeUsers: number;
 }
 
 const Dashboard = () => {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
-    totalPatients: 0
+    totalPatients: 0,
+    todayAppointments: 12,
+    pendingReports: 3,
+    activeUsers: 8
   });
 
   useEffect(() => {
@@ -45,9 +54,10 @@ const Dashboard = () => {
           .select('*', { count: 'exact', head: true })
           .eq('is_active', true);
 
-        setStats({
+        setStats(prevStats => ({
+          ...prevStats,
           totalPatients: patientsCount || 0
-        });
+        }));
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       }
@@ -58,186 +68,215 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
-          <Activity className="h-8 w-8 animate-pulse text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Učitavanje...</p>
+          <div className="w-16 h-16 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Učitavanje...</p>
         </div>
       </div>
     );
   }
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-destructive text-destructive-foreground';
-      case 'doctor': return 'bg-primary text-primary-foreground';
-      case 'nurse': return 'bg-success text-success-foreground';
-      case 'receptionist': return 'bg-secondary text-secondary-foreground';
-      default: return 'bg-muted text-muted-foreground';
+  const statsCards = [
+    {
+      title: "Ukupno pacijenata",
+      value: stats.totalPatients,
+      change: "+12%",
+      icon: Users,
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-500/10"
+    },
+    {
+      title: "Današnji termini",
+      value: stats.todayAppointments,
+      change: "+5%",
+      icon: Calendar,
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-500/10"
+    },
+    {
+      title: "Pending izvještaji",
+      value: stats.pendingReports,
+      change: "-2%",
+      icon: FileText,
+      color: "from-orange-500 to-amber-500",
+      bgColor: "bg-orange-500/10"
+    },
+    {
+      title: "Aktivni korisnici",
+      value: stats.activeUsers,
+      change: "+8%",
+      icon: Activity,
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-500/10"
     }
-  };
-
-  const getRoleText = (role: string) => {
-    switch (role) {
-      case 'admin': return 'Administrator';
-      case 'doctor': return 'Lekar';
-      case 'nurse': return 'Sestra';
-      case 'receptionist': return 'Recepcioner';
-      default: return 'Nepoznato';
-    }
-  };
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div className="flex h-screen bg-gradient-to-br from-black via-gray-900 to-black overflow-hidden">
+      <Sidebar />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <header className="h-16 bg-black/50 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6">
           <div className="flex items-center space-x-4">
-            <div className="bg-gradient-medical p-2 rounded-lg shadow-medical">
-              <Activity className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">PulsMedic</h1>
-              <p className="text-sm text-muted-foreground">Sistem za upravljanje ordinacijom</p>
+            <h1 className="text-white text-xl font-bold">Dashboard</h1>
+            <div className="text-sm text-gray-400">
+              Dobrodošli, {profile?.full_name?.split(' ')[0] || 'Korisnik'}
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-foreground">
-                {profile?.full_name || 'Korisnik'}
-              </p>
-              <Badge className={`text-xs ${getRoleBadgeColor(profile?.role || '')}`}>
-                {getRoleText(profile?.role || '')}
-              </Badge>
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input 
+                type="text" 
+                placeholder="Pretraži..."
+                className="bg-white/5 border border-white/10 rounded-full pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/20 w-64"
+              />
             </div>
-            <Button
-              variant="glass"
-              size="icon"
-              onClick={handleSignOut}
-              className="hover:shadow-glass-hover hover:text-destructive transition-all duration-300"
+            
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full">
+              <Bell className="w-5 h-5" />
+            </Button>
+            
+            {/* Theme Toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full"
             >
-              <LogOut className="h-4 w-4" />
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Dobrodošli, {profile?.full_name?.split(' ')[0] || 'Korisnik'}!
-          </h2>
-          <p className="text-muted-foreground">
-            Pregled aktivnosti vaše ordinacije za danas
-          </p>
-        </div>
+        {/* Content */}
+        <main className="flex-1 overflow-auto p-6 space-y-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            {statsCards.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={index} className="bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-green-500/10">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                        <Icon className="w-6 h-6 text-white" />
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        stat.change.startsWith('+') ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'
+                      }`}>
+                        {stat.change}
+                      </span>
+                    </div>
+                    <h3 className="text-gray-400 text-sm font-medium mb-2">{stat.title}</h3>
+                    <p className="text-white text-2xl font-bold">{stat.value}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8 max-w-md">
-          <Card className="glass glass-hover border-border/20 shadow-glass">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ukupno pacijenata</CardTitle>
-              <div className="p-2 bg-success/10 rounded-lg">
-                <Users className="h-4 w-4 text-success" />
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card 
+              className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 backdrop-blur-xl border-blue-500/20 hover:from-blue-500/20 hover:to-cyan-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20"
+              onClick={() => navigate('/patients')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="p-4 bg-blue-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                    <Users className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white text-lg font-bold">Pacijenti</h3>
+                    <p className="text-gray-400 text-sm">Upravljaj pacijentima</p>
+                  </div>
+                </div>
+                <div className="text-blue-400 text-sm font-medium">→ Otvori</div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-br from-green-500/10 to-emerald-500/5 backdrop-blur-xl border-green-500/20 hover:from-green-500/20 hover:to-emerald-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 hover:shadow-2xl hover:shadow-green-500/20"
+              onClick={() => navigate('/appointments')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="p-4 bg-green-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                    <Calendar className="w-8 h-8 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white text-lg font-bold">Termini</h3>
+                    <p className="text-gray-400 text-sm">Kalendar termina</p>
+                  </div>
+                </div>
+                <div className="text-green-400 text-sm font-medium">→ Otvori</div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="bg-gradient-to-br from-purple-500/10 to-pink-500/5 backdrop-blur-xl border-purple-500/20 hover:from-purple-500/20 hover:to-pink-500/10 transition-all duration-300 cursor-pointer group hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-500/20"
+              onClick={() => navigate('/specialist-report')}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="p-4 bg-purple-500/20 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                    <FileText className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white text-lg font-bold">Izvještaji</h3>
+                    <p className="text-gray-400 text-sm">Specijalistički izvještaji</p>
+                  </div>
+                </div>
+                <div className="text-purple-400 text-sm font-medium">→ Otvori</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Recent Activity */}
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white text-lg font-bold">Nedavne aktivnosti</h3>
+                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  Filter
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground bg-gradient-medical bg-clip-text text-transparent">{stats.totalPatients}</div>
-              <p className="text-xs text-muted-foreground">
-                aktivnih pacijenata
-              </p>
+              <div className="space-y-4">
+                {[
+                  { action: "Novi pacijent registrovan", time: "prije 2 min", user: "Dr. Marković", type: "success" },
+                  { action: "Termin otkazan", time: "prije 15 min", user: "Sestra Ana", type: "warning" },
+                  { action: "Izvještaj kreiran", time: "prije 1h", user: "Dr. Petrov", type: "info" },
+                  { action: "Sistem ažuriran", time: "prije 2h", user: "Administrator", type: "success" }
+                ].map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type === 'success' ? 'bg-green-400' :
+                      activity.type === 'warning' ? 'bg-yellow-400' : 'bg-blue-400'
+                    }`}></div>
+                    <div className="flex-1">
+                      <p className="text-white text-sm font-medium">{activity.action}</p>
+                      <p className="text-gray-400 text-xs">{activity.user} • {activity.time}</p>
+                    </div>
+                    <Clock className="w-4 h-4 text-gray-500" />
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card 
-            className="card-professional cursor-pointer group shadow-glass border-border/20 overflow-hidden relative"
-            onClick={() => navigate('/patients')}
-          >
-            <div className="absolute inset-0 bg-gradient-medical opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-            <CardHeader className="relative z-10">
-              <div className="flex items-center space-x-3">
-                <div className="bg-primary/10 p-3 rounded-xl group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
-                  <UserPlus className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg group-hover:text-primary transition-colors duration-300">Upravljaj pacijentima</CardTitle>
-                  <CardDescription className="group-hover:text-primary/70 transition-colors duration-300">Dodaj i upravljaj pacijentima</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card 
-            className="card-professional cursor-pointer group shadow-glass border-border/20 overflow-hidden relative"
-            onClick={() => navigate('/appointments')}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-success/10 to-success/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardHeader className="relative z-10">
-              <div className="flex items-center space-x-3">
-                <div className="bg-success/10 p-3 rounded-xl group-hover:bg-success/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
-                  <Calendar className="h-6 w-6 text-success" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg group-hover:text-success transition-colors duration-300">Kalendar termina</CardTitle>
-                  <CardDescription className="group-hover:text-success/70 transition-colors duration-300">Zakaži i upravljaj terminima</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card 
-            className="card-professional cursor-pointer group shadow-glass border-border/20 overflow-hidden relative"
-            onClick={() => navigate('/specialist-report')}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardHeader className="relative z-10">
-              <div className="flex items-center space-x-3">
-                <div className="bg-accent/10 p-3 rounded-xl group-hover:bg-accent/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
-                  <FileText className="h-6 w-6 text-accent-foreground" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg group-hover:text-accent-foreground transition-colors duration-300">Specijalistički izvještaj</CardTitle>
-                  <CardDescription className="group-hover:text-accent-foreground/70 transition-colors duration-300">Kreiraj i štampaj izvještaje</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-
-          {profile?.role === 'admin' && (
-            <Card 
-              className="card-professional cursor-pointer group shadow-glass border-border/20 overflow-hidden relative"
-              onClick={() => navigate('/admin')}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-destructive/10 to-destructive/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <CardHeader className="relative z-10">
-                <div className="flex items-center space-x-3">
-                  <div className="bg-destructive/10 p-3 rounded-xl group-hover:bg-destructive/20 group-hover:scale-110 transition-all duration-300 shadow-inset">
-                    <Settings className="h-6 w-6 text-destructive" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg group-hover:text-destructive transition-colors duration-300">Administracija</CardTitle>
-                    <CardDescription className="group-hover:text-destructive/70 transition-colors duration-300">Upravljanje korisnicima i sistemom</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
-          )}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };

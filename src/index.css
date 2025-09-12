@@ -90,55 +90,53 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode for medical interface */
-    --background: 214 15% 8%;
-    --foreground: 214 15% 92%;
+    /* Spotify-inspired dark theme */
+    --background: 0 0% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 214 15% 10%;
-    --card-foreground: 214 15% 92%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 214 15% 10%;
-    --popover-foreground: 214 15% 92%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 200 98% 45%;
-    --primary-foreground: 214 15% 8%;
-    --primary-glow: 200 80% 60%;
+    --primary: 142 69% 58%;  /* Spotify green */
+    --primary-foreground: 0 0% 0%;
+    --primary-glow: 142 69% 75%;
 
-    --secondary: 214 15% 14%;
-    --secondary-foreground: 214 15% 92%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 214 15% 14%;
-    --muted-foreground: 214 15% 65%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 63%;
 
-    --accent: 214 15% 14%;
-    --accent-foreground: 214 15% 92%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 90%;
 
     --destructive: 0 72% 55%;
-    --destructive-foreground: 214 15% 8%;
+    --destructive-foreground: 0 0% 98%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 90% 10%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 0%;
     
-    --success: 160 84% 39%;
-    --success-foreground: 160 80% 10%;
+    --success: 142 69% 58%;  /* Spotify green */
+    --success-foreground: 0 0% 0%;
 
-    --border: 214 15% 18%;
-    --input: 214 15% 16%;
-    --ring: 200 98% 45%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 15%;
+    --input: 0 0% 12%;
+    --ring: 142 69% 58%;
 
-    /* Glass morphism effects for dark mode */
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-hover-bg: rgba(255, 255, 255, 0.1);
+    /* Enhanced glass morphism for Spotify look */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-hover-bg: rgba(255, 255, 255, 0.08);
+    
+    /* Spotify-style gradients */
+    --gradient-medical: linear-gradient(135deg, hsl(142 69% 58%), hsl(142 69% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 6%), hsl(0 0% 9%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 9%), hsl(0 0% 12%));
   }
+}
 
 * {
   @apply border-border;
@@ -146,6 +144,11 @@ All colors MUST be HSL.
 
 body {
   @apply bg-background text-foreground;
+}
+
+html.dark body {
+  background: linear-gradient(135deg, #000000, #0a0a0a, #121212);
+  min-height: 100vh;
 }
 
 /* Glass morphism utilities */
@@ -217,6 +220,4 @@ body {
 
 .shadow-float-lg {
   box-shadow: 0 20px 50px -12px hsl(var(--primary) / 0.25), 0 15px 15px -5px hsl(var(--primary) / 0.04);
-}
-
 }
