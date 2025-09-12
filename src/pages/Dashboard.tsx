@@ -255,6 +255,12 @@ const Dashboard = () => {
 
     if (user) {
       fetchStats();
+      // Also refresh activities every 30 seconds to catch new changes
+      const interval = setInterval(() => {
+        fetchRecentActivities();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [user, loading, navigate]);
 
