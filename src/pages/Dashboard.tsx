@@ -23,7 +23,7 @@ import {
 interface DashboardStats {
   totalPatients: number;
   todayAppointments: number;
-  pendingReports: number;
+  lowStockItems: number;
   activeUsers: number;
 }
 
@@ -33,9 +33,9 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalPatients: 0,
-    todayAppointments: 12,
-    pendingReports: 3,
-    activeUsers: 8
+    todayAppointments: 0,
+    lowStockItems: 0,
+    activeUsers: 0
   });
 
   useEffect(() => {
@@ -54,10 +54,35 @@ const Dashboard = () => {
           .select('*', { count: 'exact', head: true })
           .eq('is_active', true);
 
-        setStats(prevStats => ({
-          ...prevStats,
-          totalPatients: patientsCount || 0
-        }));
+        // Today's appointments
+        const today = new Date().toISOString().split('T')[0];
+        const { count: todayAppointmentsCount } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .eq('appointment_date', today)
+          .in('status', ['scheduled', 'in_progress']);
+
+        // Low stock items (items below minimum stock level)
+        const { data: inventoryItems } = await supabase
+          .from('inventory_items')
+          .select('current_stock, min_stock_level');
+        
+        const lowStockCount = inventoryItems?.filter(item => 
+          item.current_stock < item.min_stock_level
+        ).length || 0;
+
+        // Active users
+        const { count: activeUsersCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true);
+
+        setStats({
+          totalPatients: patientsCount || 0,
+          todayAppointments: todayAppointmentsCount || 0,
+          lowStockItems: lowStockCount,
+          activeUsers: activeUsersCount || 0
+        });
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       }
@@ -97,9 +122,9 @@ const Dashboard = () => {
       bgColor: "bg-green-500/10"
     },
     {
-      title: "Pending izvještaji",
-      value: stats.pendingReports,
-      change: "-2%",
+      title: "Niska zaliha",
+      value: stats.lowStockItems,
+      change: stats.lowStockItems > 0 ? "⚠️" : "✅",
       icon: FileText,
       color: "from-orange-500 to-amber-500",
       bgColor: "bg-orange-500/10"
@@ -232,8 +257,8 @@ const Dashboard = () => {
                     <FileText className="w-8 h-8 text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="text-white text-lg font-bold">Izvještaji</h3>
-                    <p className="text-gray-400 text-sm">Specijalistički izvještaji</p>
+                    <h3 className="text-white text-lg font-bold">Izvestaji</h3>
+                    <p className="text-gray-400 text-sm">Specijalistički izvestaji</p>
                   </div>
                 </div>
                 <div className="text-purple-400 text-sm font-medium">→ Otvori</div>
