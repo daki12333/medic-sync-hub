@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          performed_by: string | null
+          record_id: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          performed_by?: string | null
+          record_id?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          performed_by?: string | null
+          record_id?: string | null
+          table_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string

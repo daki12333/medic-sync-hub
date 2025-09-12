@@ -49,175 +49,132 @@ const Dashboard = () => {
 
   const fetchRecentActivities = async () => {
     try {
-      const activities: RecentActivity[] = [];
-      
-      // Get recent patients with creator info
-      const { data: recentPatients } = await supabase
-        .from('patients')
+      // Get recent activities from activity_logs table with user info
+      const { data: activities } = await supabase
+        .from('activity_logs')
         .select(`
-          first_name, 
-          last_name, 
+          id,
+          action,
+          event_type,
+          table_name,
           created_at,
-          profiles!patients_created_by_fkey(full_name, role)
+          profiles!activity_logs_performed_by_fkey(full_name, role)
         `)
         .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Get recent appointments with creator info
-      const { data: recentAppointments } = await supabase
-        .from('appointments')
-        .select(`
-          created_at, 
-          reason, 
-          status,
-          profiles!appointments_created_by_fkey(full_name, role),
-          patients(first_name, last_name)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      // Get recent profile updates (exclude system creation)
-      const { data: recentProfiles } = await supabase
-        .from('profiles')
-        .select('full_name, updated_at, created_at, role')
-        .order('updated_at', { ascending: false })
         .limit(10);
 
-      // Process patients
-      recentPatients?.forEach((patient, index) => {
-        const creatorInfo = patient.profiles as any;
-        const creatorName = creatorInfo?.full_name || 'Nepoznat korisnik';
-        activities.push({
-          id: `patient-${index}`,
+      if (activities && activities.length > 0) {
+        const formattedActivities: RecentActivity[] = activities.map((activity, index) => {
+          const performerInfo = activity.profiles as any;
+          const performerName = performerInfo?.full_name || 'Nepoznat korisnik';
+          
+          let actionType: 'success' | 'warning' | 'info' = 'info';
+          if (activity.event_type === 'insert') actionType = 'success';
+          else if (activity.event_type === 'delete') actionType = 'warning';
+          else if (activity.event_type === 'update') actionType = 'info';
+
+          // Make action more user-friendly
+          let friendlyAction = activity.action;
+          if (activity.table_name === 'patients') {
+            if (activity.event_type === 'insert') {
+              friendlyAction = 'Registrovan novi pacijent';
+            } else if (activity.event_type === 'update') {
+              friendlyAction = 'Ažuriran pacijent';
+            }
+          } else if (activity.table_name === 'appointments') {
+            if (activity.event_type === 'insert') {
+              friendlyAction = 'Zakazan novi termin';
+            } else if (activity.event_type === 'update') {
+              friendlyAction = 'Ažuriran termin';
+            } else if (activity.event_type === 'delete') {
+              friendlyAction = 'Otkazan termin';
+            }
+          } else if (activity.table_name === 'profiles') {
+            friendlyAction = 'Ažuriran profil korisnika';
+          }
+
+          return {
+            id: `activity-${activity.id}`,
+            action: friendlyAction,
+            time: formatTimeAgo(activity.created_at),
+            user: performerName,
+            type: actionType
+          };
+        });
+
+        setRecentActivities(formattedActivities);
+      } else {
+        // Fallback to simple queries if activity_logs is empty
+        await fetchSimpleActivities();
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      // Fallback to simple queries
+      await fetchSimpleActivities();
+    }
+  };
+
+  const fetchSimpleActivities = async () => {
+    try {
+      const simpleActivities: RecentActivity[] = [];
+      
+      // Simple patients query
+      const { data: patients } = await supabase
+        .from('patients')
+        .select('first_name, last_name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      patients?.forEach((patient, index) => {
+        simpleActivities.push({
+          id: `simple-patient-${index}`,
           action: `Registrovan novi pacijent: ${patient.first_name} ${patient.last_name}`,
           time: formatTimeAgo(patient.created_at),
-          user: creatorName,
+          user: "Sistem",
           type: 'success'
         });
       });
 
-      // Process appointments
-      recentAppointments?.forEach((appointment, index) => {
-        const creatorInfo = appointment.profiles as any;
-        const creatorName = creatorInfo?.full_name || 'Nepoznat korisnik';
-        const patientInfo = appointment.patients as any;
-        const patientName = patientInfo ? `${patientInfo.first_name} ${patientInfo.last_name}` : 'Nepoznat pacijent';
-        
-        let actionText = '';
-        if (appointment.status === 'cancelled') {
-          actionText = `Otkazan termin za ${patientName}`;
-        } else {
-          actionText = `Zakazan termin za ${patientName} - ${appointment.reason || 'Pregled'}`;
-        }
-        
-        activities.push({
-          id: `appointment-${index}`,
-          action: actionText,
+      // Simple appointments query (if any exist)
+      const { data: appointments } = await supabase
+        .from('appointments')
+        .select('created_at, reason')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      appointments?.forEach((appointment, index) => {
+        simpleActivities.push({
+          id: `simple-appointment-${index}`,
+          action: `Zakazan novi termin - ${appointment.reason || 'Pregled'}`,
           time: formatTimeAgo(appointment.created_at),
-          user: creatorName,
-          type: appointment.status === 'cancelled' ? 'warning' : 'info'
+          user: "Sistem",
+          type: 'info'
         });
       });
 
-      // Process profile updates
-      recentProfiles?.forEach((profile, index) => {
-        // Only show if updated recently (not just created)
-        const updatedTime = new Date(profile.updated_at);
-        const createdTime = new Date(profile.created_at);
-        if (updatedTime.getTime() > createdTime.getTime() + 5000) { // 5 second buffer
-          activities.push({
-            id: `profile-${index}`,
-            action: `Ažuriran profil korisnika`,
-            time: formatTimeAgo(profile.updated_at),
-            user: profile.full_name || 'Nepoznat korisnik',
-            type: 'warning'
-          });
-        }
-      });
-
-      // Sort activities by timestamp (parse time ago to get actual time comparison)
-      activities.sort((a, b) => {
-        // Since we're getting ordered data, keep the mixed order but prioritize newer ones
-        const timeA = getTimestamp(a.time);
-        const timeB = getTimestamp(b.time);
-        return timeB - timeA;
-      });
-
-      setRecentActivities(activities.slice(0, 6));
-    } catch (error) {
-      console.error('Error fetching recent activities:', error);
-      
-      // Fallback to try simpler queries if joins fail
-      try {
-        const simpleActivities: RecentActivity[] = [];
-        
-        // Simple patients query
-        const { data: patients } = await supabase
-          .from('patients')
-          .select('first_name, last_name, created_at')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        patients?.forEach((patient, index) => {
-          simpleActivities.push({
-            id: `simple-patient-${index}`,
-            action: `Registrovan novi pacijent: ${patient.first_name} ${patient.last_name}`,
-            time: formatTimeAgo(patient.created_at),
-            user: "Sistem",
-            type: 'success'
-          });
+      if (simpleActivities.length === 0) {
+        simpleActivities.push({
+          id: 'fallback-1',
+          action: "Sistem je spreman za rad", 
+          time: "prije 1 min", 
+          user: "PulsMedic Sistem", 
+          type: "success" 
         });
-
-        // Simple appointments query
-        const { data: appointments } = await supabase
-          .from('appointments')
-          .select('created_at, reason')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        appointments?.forEach((appointment, index) => {
-          simpleActivities.push({
-            id: `simple-appointment-${index}`,
-            action: `Zakazan novi termin - ${appointment.reason || 'Pregled'}`,
-            time: formatTimeAgo(appointment.created_at),
-            user: "Sistem",
-            type: 'info'
-          });
-        });
-
-        setRecentActivities(simpleActivities.slice(0, 6));
-      } catch (fallbackError) {
-        console.error('Fallback query also failed:', fallbackError);
-        setRecentActivities([
-          { 
-            id: 'fallback-1',
-            action: "Sistem je spreman za rad", 
-            time: "prije 1 min", 
-            user: "PulsMedic Sistem", 
-            type: "success" 
-          }
-        ]);
       }
-    }
-  };
 
-  const getTimestamp = (timeAgo: string): number => {
-    // Convert "prije X min/h/dana" back to timestamp for sorting
-    const now = Date.now();
-    if (timeAgo.includes('upravo sada')) return now;
-    if (timeAgo.includes('min')) {
-      const minutes = parseInt(timeAgo.match(/\d+/)?.[0] || '0');
-      return now - (minutes * 60 * 1000);
+      setRecentActivities(simpleActivities.slice(0, 6));
+    } catch (fallbackError) {
+      console.error('Fallback query also failed:', fallbackError);
+      setRecentActivities([
+        { 
+          id: 'fallback-1',
+          action: "Sistem je spreman za rad", 
+          time: "prije 1 min", 
+          user: "PulsMedic Sistem", 
+          type: "success" 
+        }
+      ]);
     }
-    if (timeAgo.includes('h')) {
-      const hours = parseInt(timeAgo.match(/\d+/)?.[0] || '0');
-      return now - (hours * 60 * 60 * 1000);
-    }
-    if (timeAgo.includes('dana')) {
-      const days = parseInt(timeAgo.match(/\d+/)?.[0] || '0');
-      return now - (days * 24 * 60 * 60 * 1000);
-    }
-    return now;
   };
 
   const formatTimeAgo = (dateString: string): string => {
