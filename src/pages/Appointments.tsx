@@ -490,26 +490,6 @@ const Appointments = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        {appointment.status === 'scheduled' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
-                            className="text-primary hover:bg-primary/10"
-                          >
-                            Potvrdi
-                          </Button>
-                        )}
-                        {appointment.status === 'confirmed' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                            className="text-success hover:bg-success/10"
-                          >
-                            Završi
-                          </Button>
-                        )}
                         <Button
                           variant="outline"
                           size="sm"
