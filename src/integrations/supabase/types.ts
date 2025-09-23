@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          event_type: string
+          id: string
+          performed_by: string | null
+          table_name: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          event_type: string
+          id?: string
+          performed_by?: string | null
+          table_name: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          performed_by?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -25,6 +52,7 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          reason: string | null
           status: string | null
           updated_at: string
         }
@@ -38,6 +66,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          reason?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -51,6 +80,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          reason?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -147,10 +177,12 @@ export type Database = {
           created_at: string
           email: string | null
           first_name: string | null
+          full_name: string | null
           id: string
           is_active: boolean | null
           last_name: string | null
           role: string | null
+          specialization: string | null
           updated_at: string
           user_id: string
         }
@@ -158,10 +190,12 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_name?: string | null
           role?: string | null
+          specialization?: string | null
           updated_at?: string
           user_id: string
         }
@@ -169,10 +203,12 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          full_name?: string | null
           id?: string
           is_active?: boolean | null
           last_name?: string | null
           role?: string | null
+          specialization?: string | null
           updated_at?: string
           user_id?: string
         }
