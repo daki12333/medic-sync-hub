@@ -14,7 +14,170 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          created_at: string
+          created_by: string
+          doctor_id: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          patient_id: string
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          created_at?: string
+          created_by: string
+          doctor_id: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          created_at?: string
+          created_by?: string
+          doctor_id?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_permissions: {
+        Row: {
+          can_edit: boolean | null
+          can_view: boolean | null
+          created_at: string
+          created_by: string
+          doctor_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string
+          created_by: string
+          doctor_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          created_at?: string
+          created_by?: string
+          doctor_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patients: {
+        Row: {
+          address: string | null
+          created_at: string
+          created_by: string | null
+          date_of_birth: string | null
+          email: string | null
+          first_name: string
+          id: string
+          is_active: boolean | null
+          last_name: string
+          medical_history: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          last_name: string
+          medical_history?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          last_name?: string
+          medical_history?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string | null
+          id: string
+          is_active: boolean | null
+          last_name: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_name?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
