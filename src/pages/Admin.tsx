@@ -220,13 +220,27 @@ const Admin = () => {
 
     if (window.confirm('Da li ste sigurni da želite da obrišete ovog korisnika? Ova akcija se ne može poništiti.')) {
       try {
-        // First delete the profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', userId);
+        // Find the user_id from the profile
+        const profile = profiles.find(p => p.id === userId);
+        if (!profile) {
+          throw new Error('Profile not found');
+        }
 
-        if (profileError) throw profileError;
+        // Call Edge Function to delete user from auth
+        const { data, error } = await supabase.functions.invoke('delete-user', {
+          body: {
+            user_id: profile.user_id
+          }
+        });
+
+        if (error) {
+          console.error('Edge function error:', error);
+          throw error;
+        }
+        if (data?.error) {
+          console.error('Edge function data error:', data.error);
+          throw new Error(data.error);
+        }
 
         toast({
           title: "Uspešno",
@@ -235,6 +249,7 @@ const Admin = () => {
 
         fetchData();
       } catch (error: any) {
+        console.error('Error deleting user:', error);
         toast({
           title: "Greška",
           description: error.message || "Nije moguće obrisati korisnika",
