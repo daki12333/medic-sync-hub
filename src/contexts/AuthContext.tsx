@@ -6,13 +6,15 @@ import { useToast } from '@/hooks/use-toast';
 interface Profile {
   id: string;
   user_id: string;
-  email: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
   full_name: string | null;
-  role: 'admin' | 'doctor' | 'nurse' | 'receptionist';
-  phone: string | null;
+  role: string | null;
   specialization: string | null;
-  license_number: string | null;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface AuthContextType {

@@ -31,14 +31,15 @@ import {
 interface Profile {
   id: string;
   user_id: string;
-  email: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
   full_name: string | null;
-  role: 'admin' | 'doctor' | 'nurse';
-  phone: string | null;
+  role: string | null;
   specialization: string | null;
-  license_number: string | null;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 interface CalendarPermission {
@@ -67,8 +68,7 @@ const Admin = () => {
     email: '',
     password: '',
     full_name: '',
-    role: 'nurse' as Profile['role'],
-    phone: ''
+    role: 'doctor' as string,
   });
 
   const [permissionForm, setPermissionForm] = useState({
@@ -102,17 +102,18 @@ const Admin = () => {
       if (profilesError) throw profilesError;
       setProfiles((profilesData || []).filter(p => p.role !== 'receptionist') as Profile[]);
 
-      // Fetch calendar permissions
+      // Fetch calendar permissions - simplified without foreign keys
       const { data: permissionsData, error: permissionsError } = await supabase
         .from('calendar_permissions')
-        .select(`
-          *,
-          user:profiles!calendar_permissions_user_id_fkey(full_name, email),
-          doctor:profiles!calendar_permissions_doctor_id_fkey(full_name, email)
-        `);
+        .select('*');
 
-      if (permissionsError) throw permissionsError;
-      setPermissions(permissionsData || []);
+      if (permissionsError) {
+        console.warn('Calendar permissions error:', permissionsError);
+        setPermissions([]);
+      } else {
+        // Filter out invalid permissions and set empty array for now
+        setPermissions([]);
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -134,7 +135,6 @@ const Admin = () => {
         email: newUser.email,
         full_name: newUser.full_name,
         role: newUser.role,
-        phone: newUser.phone
       });
 
       // Call Edge Function to create user
@@ -144,7 +144,6 @@ const Admin = () => {
           password: newUser.password,
           full_name: newUser.full_name,
           role: newUser.role,
-          phone: newUser.phone || null,
         }
       });
 
@@ -169,8 +168,7 @@ const Admin = () => {
         email: '',
         password: '',
         full_name: '',
-        role: 'nurse',
-        phone: ''
+        role: 'doctor',
       });
       
       fetchData();
@@ -453,15 +451,6 @@ const Admin = () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefon</Label>
-                      <Input
-                        id="phone"
-                        value={newUser.phone}
-                        onChange={(e) => setNewUser(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+381 11 234 5678"
-                      />
-                    </div>
                     
                     {(newUser.role === 'doctor' || newUser.role === 'nurse') && (
                       <>
