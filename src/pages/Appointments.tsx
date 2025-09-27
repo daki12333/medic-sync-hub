@@ -48,12 +48,9 @@ interface Appointment {
   status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   reason: string | null;
   notes: string | null;
-  diagnosis: string | null;
-  treatment: string | null;
-  next_appointment_needed: boolean;
   created_at: string;
   patients: Patient;
-  profiles: Doctor;
+  doctor: Doctor;
 }
 
 const Appointments = () => {
@@ -92,30 +89,43 @@ const Appointments = () => {
     try {
       setLoadingData(true);
       
-      // Fetch appointments
+      // Fetch appointments with patients
       const { data: appointmentsData, error: appointmentsError } = await supabase
         .from('appointments')
         .select(`
           *,
-          patients!inner (id, first_name, last_name),
-          profiles!appointments_doctor_id_fkey (id, full_name, specialization)
+          patients!inner (id, first_name, last_name)
         `)
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true });
 
       if (appointmentsError) throw appointmentsError;
       
-      // Filter out appointments with failed joins and properly type the data
-      const validAppointments = (appointmentsData || []).filter(appointment => 
-        appointment.patients && 
-        appointment.profiles && 
-        typeof appointment.patients === 'object' &&
-        typeof appointment.profiles === 'object' &&
-        !('error' in appointment.patients) &&
-        !('error' in appointment.profiles)
-      ) as Appointment[];
+      // Get all doctor IDs from appointments
+      const doctorIds = [...new Set(appointmentsData?.map(apt => apt.doctor_id) || [])];
       
-      setAppointments(validAppointments);
+      // Fetch doctors separately
+      const { data: doctorsData, error: doctorsError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, specialization')
+        .in('user_id', doctorIds);
+
+      if (doctorsError) throw doctorsError;
+      
+      // Create a map of doctors by user_id
+      const doctorsMap = new Map(doctorsData?.map(doc => [doc.user_id, doc]) || []);
+      
+      // Combine appointments with doctor data
+      const appointmentsWithDoctors = appointmentsData?.map(appointment => ({
+        ...appointment,
+        doctor: doctorsMap.get(appointment.doctor_id) ? {
+          id: doctorsMap.get(appointment.doctor_id)!.user_id,
+          full_name: doctorsMap.get(appointment.doctor_id)!.full_name,
+          specialization: doctorsMap.get(appointment.doctor_id)!.specialization
+        } : null
+      })).filter(apt => apt.doctor) || [];
+      
+      setAppointments(appointmentsWithDoctors as Appointment[]);
 
       // Fetch patients
       const { data: patientsData, error: patientsError } = await supabase
@@ -127,16 +137,20 @@ const Appointments = () => {
       if (patientsError) throw patientsError;
       setPatients(patientsData || []);
 
-      // Fetch doctors
-      const { data: doctorsData, error: doctorsError } = await supabase
+      // Fetch doctors for form
+      const { data: allDoctorsData, error: allDoctorsError } = await supabase
         .from('profiles')
-        .select('id, full_name, specialization')
+        .select('user_id, full_name, specialization')
         .eq('role', 'doctor')
         .eq('is_active', true)
         .order('full_name', { ascending: true });
 
-      if (doctorsError) throw doctorsError;
-      setDoctors(doctorsData || []);
+      if (allDoctorsError) throw allDoctorsError;
+      setDoctors((allDoctorsData || []).map(doc => ({
+        id: doc.user_id,
+        full_name: doc.full_name,
+        specialization: doc.specialization
+      })));
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -483,7 +497,7 @@ const Appointments = () => {
                             </div>
                             <div className="flex items-center space-x-2">
                               <User className="h-4 w-4" />
-                              <span>Dr {appointment.profiles.full_name}</span>
+                              <span>Dr {appointment.doctor.full_name}</span>
                             </div>
                           </div>
                         </div>
