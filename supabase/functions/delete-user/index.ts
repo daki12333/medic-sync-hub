@@ -50,7 +50,27 @@ serve(async (req) => {
 
     console.log('👤 Deleting user:', user_id)
 
-    // Delete the user from auth.users (this will cascade delete the profile)
+    // First delete the profile record to avoid foreign key constraint violation
+    console.log('🗑️ Deleting profile first...')
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
+      .delete()
+      .eq('user_id', user_id)
+
+    if (profileError) {
+      console.error('❌ Profile delete error:', profileError)
+      return new Response(
+        JSON.stringify({ error: profileError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('✅ Profile deleted, now deleting auth user...')
+
+    // Now delete the user from auth.users
     const { error: authError } = await supabaseClient.auth.admin.deleteUser(user_id)
 
     if (authError) {
