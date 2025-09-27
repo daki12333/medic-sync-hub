@@ -42,7 +42,7 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('📝 Request body:', requestBody)
     
-    const { email, password, full_name, role, phone, specialization, license_number } = requestBody
+    const { email, password, full_name, role, specialization } = requestBody
 
     // Validate required fields
     if (!email || !password || !full_name || !role) {
@@ -113,16 +113,14 @@ serve(async (req) => {
 
           let profileOperation;
           if (existingProfile) {
-            // Update existing profile
+            // Update existing profile  
             profileOperation = await supabaseClient
               .from('profiles')
               .update({
                 email,
                 full_name,
                 role,
-                phone: phone || null,
                 specialization: specialization || null,
-                license_number: license_number || null,
               })
               .eq('user_id', existingUser.id);
           } else {
@@ -134,9 +132,7 @@ serve(async (req) => {
                 email,
                 full_name,
                 role,
-                phone: phone || null,
                 specialization: specialization || null,
-                license_number: license_number || null,
               });
           }
 
@@ -190,9 +186,7 @@ serve(async (req) => {
         email,
         full_name,
         role,
-        phone: phone || null,
         specialization: specialization || null,
-        license_number: license_number || null,
       })
 
     if (profileError) {
@@ -209,9 +203,7 @@ serve(async (req) => {
             email,
             full_name,
             role,
-            phone: phone || null,
             specialization: specialization || null,
-            license_number: license_number || null,
           })
           .eq('user_id', authData.user.id)
 
@@ -261,9 +253,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('💥 Function error:', error)
-    console.error('💥 Error stack:', error.stack)
+    console.error('💥 Error stack:', (error as Error).stack)
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: (error as Error).message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
