@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {
@@ -68,7 +69,60 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ Profile deleted, now deleting auth user...')
+    console.log('✅ Profile deleted, cleaning related records...')
+
+    // Delete user roles
+    const { error: rolesError } = await supabaseClient
+      .from('user_roles')
+      .delete()
+      .eq('user_id', user_id)
+
+    if (rolesError) {
+      console.error('❌ User roles delete error:', rolesError)
+      return new Response(
+        JSON.stringify({ error: rolesError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Delete calendar permissions where the user is the subject
+    const { error: calPermUserError } = await supabaseClient
+      .from('calendar_permissions')
+      .delete()
+      .eq('user_id', user_id)
+
+    if (calPermUserError) {
+      console.error('❌ Calendar permissions (user) delete error:', calPermUserError)
+      return new Response(
+        JSON.stringify({ error: calPermUserError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Delete calendar permissions created by this user (if any)
+    const { error: calPermCreatorError } = await supabaseClient
+      .from('calendar_permissions')
+      .delete()
+      .eq('created_by', user_id)
+
+    if (calPermCreatorError) {
+      console.error('❌ Calendar permissions (creator) delete error:', calPermCreatorError)
+      return new Response(
+        JSON.stringify({ error: calPermCreatorError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('🧹 Related records cleaned, now deleting auth user...')
 
     // Now delete the user from auth.users
     const { error: authError } = await supabaseClient.auth.admin.deleteUser(user_id)
