@@ -416,10 +416,6 @@ const Patients = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
             </div>
-            ${selectedPatient.date_of_birth ? `<div class="field">
-              <span class="field-label">Datum rođenja:</span>
-              <span class="field-value">${format(new Date(selectedPatient.date_of_birth), 'dd.MM.yyyy')}</span>
-            </div>` : ''}
             ${selectedPatient.phone ? `<div class="field">
               <span class="field-label">Telefon:</span>
               <span class="field-value">${selectedPatient.phone}</span>
