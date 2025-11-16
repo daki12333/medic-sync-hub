@@ -181,6 +181,65 @@ export type Database = {
         }
         Relationships: []
       }
+      specialist_reports: {
+        Row: {
+          anamnesis: string | null
+          control: string | null
+          created_at: string
+          created_by: string
+          diagnosis: string | null
+          doctor_id: string
+          echo_findings: string | null
+          exam_date: string
+          id: string
+          lab_results: string | null
+          objective_findings: string | null
+          patient_id: string
+          therapy: string | null
+          updated_at: string
+        }
+        Insert: {
+          anamnesis?: string | null
+          control?: string | null
+          created_at?: string
+          created_by: string
+          diagnosis?: string | null
+          doctor_id: string
+          echo_findings?: string | null
+          exam_date: string
+          id?: string
+          lab_results?: string | null
+          objective_findings?: string | null
+          patient_id: string
+          therapy?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anamnesis?: string | null
+          control?: string | null
+          created_at?: string
+          created_by?: string
+          diagnosis?: string | null
+          doctor_id?: string
+          echo_findings?: string | null
+          exam_date?: string
+          id?: string
+          lab_results?: string | null
+          objective_findings?: string | null
+          patient_id?: string
+          therapy?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specialist_reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

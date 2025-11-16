@@ -12,7 +12,7 @@ import Admin from "./pages/Admin";
 import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import SpecialistReport from "./pages/SpecialistReport";
-
+import ReportHistory from "./pages/ReportHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +33,7 @@ const App = () => (
           <Route path="/patients" element={<Patients />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/specialist-report" element={<SpecialistReport />} />
+          <Route path="/report-history" element={<ReportHistory />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
