@@ -1,14 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileText, Calendar, User, Printer } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, User, Printer, Trash2, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import Sidebar from '@/components/Sidebar';
 import { format } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Report {
   id: string;
@@ -35,13 +45,25 @@ interface Report {
   };
 }
 
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
 const ReportHistory = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteReportId, setDeleteReportId] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -50,7 +72,19 @@ const ReportHistory = () => {
       return;
     }
     fetchReports();
+    fetchPatients();
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchReports = async () => {
     try {
@@ -79,18 +113,83 @@ const ReportHistory = () => {
     }
   };
 
+  const fetchPatients = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name')
+        .eq('is_active', true)
+        .order('first_name');
+
+      if (error) throw error;
+      setPatients(data || []);
+    } catch (error) {
+      console.error('Error fetching patients:', error);
+    }
+  };
+
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = reports.filter(report =>
-        `${report.patients.first_name} ${report.patients.last_name}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-      );
+    if (selectedPatientId) {
+      const filtered = reports.filter(report => report.patient_id === selectedPatientId);
       setFilteredReports(filtered);
     } else {
       setFilteredReports(reports);
     }
-  }, [searchTerm, reports]);
+  }, [selectedPatientId, reports]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    
+    if (value.length > 0) {
+      const filtered = patients.filter(patient =>
+        `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredPatients(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+      setSelectedPatientId('');
+    }
+  };
+
+  const selectPatient = (patient: Patient) => {
+    setSearchTerm(`${patient.first_name} ${patient.last_name}`);
+    setSelectedPatientId(patient.id);
+    setShowSuggestions(false);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setSelectedPatientId('');
+    setShowSuggestions(false);
+  };
+
+  const handleDeleteReport = async (reportId: string) => {
+    try {
+      const { error } = await supabase
+        .from('specialist_reports')
+        .delete()
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Uspešno",
+        description: "Izveštaj je obrisan.",
+      });
+
+      fetchReports();
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće obrisati izveštaj.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteReportId(null);
+    }
+  };
 
   const handlePrint = (report: Report) => {
     const printWindow = window.open('', '_blank');
@@ -249,12 +348,38 @@ const ReportHistory = () => {
 
           <Card className="mb-6 bg-card border-border">
             <CardContent className="pt-6">
-              <Input
-                placeholder="Pretraži po imenu pacijenta..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-md"
-              />
+              <div className="relative max-w-md" ref={dropdownRef}>
+                <Input
+                  placeholder="Pretraži po imenu pacijenta..."
+                  value={searchTerm}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                />
+                {searchTerm && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-6 px-2"
+                  >
+                    ✕
+                  </Button>
+                )}
+                
+                {showSuggestions && filteredPatients.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto">
+                    {filteredPatients.map((patient) => (
+                      <button
+                        key={patient.id}
+                        onClick={() => selectPatient(patient)}
+                        className="w-full px-4 py-2 text-left hover:bg-accent flex items-center justify-between"
+                      >
+                        <span>{patient.first_name} {patient.last_name}</span>
+                        {selectedPatientId === patient.id && <Check className="h-4 w-4 text-primary" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -292,14 +417,23 @@ const ReportHistory = () => {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handlePrint(report)}
-                        className="ml-4"
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handlePrint(report)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setDeleteReportId(report.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -321,6 +455,26 @@ const ReportHistory = () => {
             </div>
           )}
         </div>
+
+        <AlertDialog open={!!deleteReportId} onOpenChange={() => setDeleteReportId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Potvrda brisanja</AlertDialogTitle>
+              <AlertDialogDescription>
+                Da li ste sigurni da želite da obrišete ovaj izveštaj? Ova akcija ne može biti poništena.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Otkaži</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteReportId && handleDeleteReport(deleteReportId)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Obriši
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
