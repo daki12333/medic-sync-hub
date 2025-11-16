@@ -59,7 +59,7 @@ const ReportHistory = () => {
         .from('specialist_reports')
         .select(`
           *,
-          patients!inner(first_name, last_name, date_of_birth, phone),
+          patients!specialist_reports_patient_id_fkey(first_name, last_name, date_of_birth, phone),
           doctor:profiles!specialist_reports_doctor_id_fkey(full_name, specialization)
         `)
         .order('exam_date', { ascending: false });
