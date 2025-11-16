@@ -361,10 +361,6 @@ const ReportHistory = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <span class="field-value">${report.patients.first_name} ${report.patients.last_name}</span>
             </div>
-            <div class="field">
-              <span class="field-label">Datum rođenja:</span>
-              <span class="field-value">${format(new Date(report.patients.date_of_birth), 'dd.MM.yyyy')}</span>
-            </div>
             ${report.patients.phone ? `<div class="field">
               <span class="field-label">Telefon:</span>
               <span class="field-value">${report.patients.phone}</span>
