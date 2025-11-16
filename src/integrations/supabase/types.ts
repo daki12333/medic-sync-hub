@@ -94,39 +94,6 @@ export type Database = {
           },
         ]
       }
-      calendar_permissions: {
-        Row: {
-          can_edit: boolean | null
-          can_view: boolean | null
-          created_at: string
-          created_by: string
-          doctor_id: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          can_edit?: boolean | null
-          can_view?: boolean | null
-          created_at?: string
-          created_by: string
-          doctor_id: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          can_edit?: boolean | null
-          can_view?: boolean | null
-          created_at?: string
-          created_by?: string
-          doctor_id?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       patients: {
         Row: {
           address: string | null
