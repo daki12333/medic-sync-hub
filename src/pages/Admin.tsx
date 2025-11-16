@@ -11,21 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
 import {
   Users,
   UserPlus,
-  Calendar,
-  Settings,
   Trash2,
-  Edit,
-  Eye,
-  EyeOff,
   Shield,
   Activity,
   ArrowLeft,
   CheckCircle,
-  XCircle
+  XCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface Profile {
@@ -42,24 +38,13 @@ interface Profile {
   updated_at: string;
 }
 
-interface CalendarPermission {
-  id: string;
-  user_id: string;
-  doctor_id: string;
-  can_view: boolean;
-  can_edit: boolean;
-  user: { full_name: string; email: string };
-  doctor: { full_name: string; email: string };
-}
 
 const Admin = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [permissions, setPermissions] = useState<CalendarPermission[]>([]);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
-  const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [creatingUser, setCreatingUser] = useState(false);
   
@@ -69,13 +54,6 @@ const Admin = () => {
     password: '',
     full_name: '',
     role: 'doctor' as string,
-  });
-
-  const [permissionForm, setPermissionForm] = useState({
-    user_id: '',
-    doctor_id: '',
-    can_view: false,
-    can_edit: false
   });
 
   useEffect(() => {
@@ -101,19 +79,6 @@ const Admin = () => {
 
       if (profilesError) throw profilesError;
       setProfiles((profilesData || []).filter(p => p.role !== 'receptionist') as Profile[]);
-
-      // Fetch calendar permissions - simplified without foreign keys
-      const { data: permissionsData, error: permissionsError } = await supabase
-        .from('calendar_permissions')
-        .select('*');
-
-      if (permissionsError) {
-        console.warn('Calendar permissions error:', permissionsError);
-        setPermissions([]);
-      } else {
-        // Filter out invalid permissions and set empty array for now
-        setPermissions([]);
-      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -259,66 +224,6 @@ const Admin = () => {
     }
   };
 
-  const createPermission = async () => {
-    try {
-      const { error } = await supabase
-        .from('calendar_permissions')
-        .insert({
-          user_id: permissionForm.user_id,
-          doctor_id: permissionForm.doctor_id,
-          can_view: permissionForm.can_view,
-          can_edit: permissionForm.can_edit,
-          created_by: profile?.id
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Uspešno",
-        description: "Dozvola je uspešno kreirana",
-      });
-
-      setIsPermissionDialogOpen(false);
-      setPermissionForm({
-        user_id: '',
-        doctor_id: '',
-        can_view: false,
-        can_edit: false
-      });
-      
-      fetchData();
-    } catch (error: any) {
-      toast({
-        title: "Greška",
-        description: error.message || "Nije moguće kreirati dozvolu",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const deletePermission = async (permissionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('calendar_permissions')
-        .delete()
-        .eq('id', permissionId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Uspešno",
-        description: "Dozvola je obrisana",
-      });
-
-      fetchData();
-    } catch (error: any) {
-      toast({
-        title: "Greška",
-        description: error.message || "Nije moguće obrisati dozvolu",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -338,8 +243,6 @@ const Admin = () => {
     }
   };
 
-  const doctors = profiles.filter(p => p.role === 'doctor');
-  const nonAdminUsers = profiles.filter(p => p.role !== 'admin');
 
   if (loading || loadingData) {
     return (
@@ -383,14 +286,10 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-1">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Korisnici</span>
-            </TabsTrigger>
-            <TabsTrigger value="permissions" className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4" />
-              <span>Dozvole za kalendare</span>
             </TabsTrigger>
           </TabsList>
 
@@ -554,149 +453,6 @@ const Admin = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          </TabsContent>
-
-          {/* Permissions Tab */}
-          <TabsContent value="permissions" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">Dozvole za kalendare</h2>
-                <p className="text-muted-foreground">Upravljanje pristupom kalendarima lekara</p>
-              </div>
-              
-              <Dialog open={isPermissionDialogOpen} onOpenChange={setIsPermissionDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-medical hover:shadow-medical">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Dodeli dozvolu
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Dodela dozvole za kalendar</DialogTitle>
-                    <DialogDescription>
-                      Odredite ko može da vidi i menja kalendar lekara
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="user_select">Korisnik</Label>
-                      <Select value={permissionForm.user_id} onValueChange={(value) => setPermissionForm(prev => ({ ...prev, user_id: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Izaberite korisnika" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {nonAdminUsers.map(user => (
-                            <SelectItem key={user.id} value={user.id}>
-                              {user.full_name} ({getRoleText(user.role)})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="doctor_select">Lekar</Label>
-                      <Select value={permissionForm.doctor_id} onValueChange={(value) => setPermissionForm(prev => ({ ...prev, doctor_id: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Izaberite lekara" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {doctors.map(doctor => (
-                            <SelectItem key={doctor.id} value={doctor.id}>
-                              {doctor.full_name} ({doctor.specialization})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="can_view">Može da vidi kalendar</Label>
-                        <Switch
-                          id="can_view"
-                          checked={permissionForm.can_view}
-                          onCheckedChange={(checked) => setPermissionForm(prev => ({ ...prev, can_view: checked }))}
-                        />
-                      </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="can_edit">Može da menja kalendar</Label>
-                        <Switch
-                          id="can_edit"
-                          checked={permissionForm.can_edit}
-                          onCheckedChange={(checked) => setPermissionForm(prev => ({ ...prev, can_edit: checked }))}
-                        />
-                      </div>
-                    </div>
-                    
-                    <Button onClick={createPermission} className="w-full bg-gradient-medical hover:shadow-medical">
-                      Dodeli dozvolu
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Permissions List */}
-            <div className="grid gap-4">
-              {permissions.map((permission) => (
-                <Card key={permission.id} className="border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-card transition-all duration-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="bg-primary/10 p-3 rounded-full">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">
-                            {permission.user.full_name}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            Pristup kalendaru: <strong>{permission.doctor.full_name}</strong>
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            {permission.can_view && (
-                              <Badge variant="outline" className="text-xs bg-success/10 text-success border-success/20">
-                                <Eye className="h-3 w-3 mr-1" />
-                                Može da vidi
-                              </Badge>
-                            )}
-                            {permission.can_edit && (
-                              <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                <Edit className="h-3 w-3 mr-1" />
-                                Može da menja
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => deletePermission(permission.id)}
-                        className="hover:shadow-card transition-all duration-200"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              
-              {permissions.length === 0 && (
-                <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardContent className="p-12 text-center">
-                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">Nema dozvola</h3>
-                    <p className="text-muted-foreground">Dodajte dozvole da korisnici mogu pristupiti kalendarima lekara.</p>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </TabsContent>
         </Tabs>
