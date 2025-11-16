@@ -251,10 +251,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      make_user_admin_by_email: {
-        Args: { _email: string }
-        Returns: undefined
-      }
+      make_user_admin_by_email: { Args: { _email: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "doctor" | "nurse" | "user"
