@@ -94,12 +94,19 @@ const SpecialistReport = () => {
       // Fetch doctors (profiles with doctor role)
       const { data: doctorsData, error: doctorsError } = await supabase
         .from('profiles')
-        .select('id, full_name, specialization')
+        .select('user_id, full_name, specialization')
         .eq('role', 'doctor')
         .eq('is_active', true);
 
       if (doctorsError) throw doctorsError;
-      setDoctors(doctorsData || []);
+      
+      // Map user_id to id for compatibility
+      const mappedDoctors = (doctorsData || []).map(d => ({
+        id: d.user_id,
+        full_name: d.full_name,
+        specialization: d.specialization
+      }));
+      setDoctors(mappedDoctors);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -128,6 +135,7 @@ const SpecialistReport = () => {
   };
 
   const selectPatient = (patient: Patient) => {
+    setSelectedPatientId(patient.id);
     setReportData(prev => ({
       ...prev,
       patient_name: `${patient.first_name} ${patient.last_name}`,
@@ -139,6 +147,7 @@ const SpecialistReport = () => {
   };
 
   const handleDoctorChange = (doctorId: string) => {
+    setSelectedDoctorId(doctorId);
     const doctor = doctors.find(d => d.id === doctorId);
     if (doctor) {
       setReportData(prev => ({
@@ -151,6 +160,62 @@ const SpecialistReport = () => {
 
   const handleAddNewPatient = () => {
     navigate('/patients', { state: { addNew: true, patientName: reportData.patient_name } });
+  };
+
+  const handleSaveAndPrint = async () => {
+    if (!reportData.patient_name || !reportData.doctor_name) {
+      toast({
+        title: "Greška",
+        description: "Molimo popunite podatke o pacijentu i lekaru.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedPatientId || !selectedDoctorId) {
+      toast({
+        title: "Greška",
+        description: "Molimo izaberite pacijenta i lekara iz liste.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Save to database
+      const { error } = await supabase
+        .from('specialist_reports')
+        .insert({
+          patient_id: selectedPatientId,
+          doctor_id: selectedDoctorId,
+          exam_date: reportData.exam_date,
+          anamnesis: reportData.anamnesis,
+          objective_findings: reportData.objective_findings,
+          diagnosis: reportData.diagnosis,
+          therapy: reportData.therapy,
+          control: reportData.control,
+          echo_findings: reportData.echo_findings,
+          lab_results: reportData.lab_results,
+          created_by: user?.id
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Uspešno",
+        description: "Izveštaj je sačuvan.",
+      });
+
+      // Continue with printing
+      handlePrint();
+    } catch (error) {
+      console.error('Error saving report:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće sačuvati izveštaj.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePrint = () => {
@@ -549,15 +614,15 @@ const SpecialistReport = () => {
             />
           </div>
 
-          {/* Print Button */}
+          {/* Save and Print Button */}
           <div className="flex justify-end pt-4">
             <Button 
-              onClick={handlePrint}
+              onClick={handleSaveAndPrint}
               disabled={!reportData.patient_name || !reportData.doctor_name}
               className="flex items-center space-x-2"
             >
               <Printer className="h-4 w-4" />
-              <span>Štampaj Izveštaj</span>
+              <span>Sačuvaj i Štampaj</span>
             </Button>
           </div>
         </CardContent>
