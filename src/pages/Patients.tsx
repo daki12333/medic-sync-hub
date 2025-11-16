@@ -18,8 +18,11 @@ import {
   Edit,
   Trash2,
   Phone,
-  Calendar
+  Calendar,
+  FileText,
+  Printer
 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface Patient {
   id: string;
@@ -31,6 +34,22 @@ interface Patient {
   created_at: string;
 }
 
+interface PatientReport {
+  id: string;
+  exam_date: string;
+  anamnesis: string;
+  objective_findings: string;
+  diagnosis: string;
+  therapy: string;
+  control: string;
+  echo_findings: string;
+  lab_results: string;
+  doctor: {
+    full_name: string;
+    specialization: string;
+  };
+}
+
 const Patients = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -39,8 +58,11 @@ const Patients = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreatePatientOpen, setIsCreatePatientOpen] = useState(false);
   const [isEditPatientOpen, setIsEditPatientOpen] = useState(false);
+  const [isViewReportsOpen, setIsViewReportsOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+  const [loadingReports, setLoadingReports] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientReports, setPatientReports] = useState<PatientReport[]>([]);
   
   const [patientForm, setPatientForm] = useState({
     first_name: '',
@@ -191,6 +213,174 @@ const Patients = () => {
       phone: patient.phone || ''
     });
     setIsEditPatientOpen(true);
+  };
+
+  const openReportsDialog = async (patient: Patient) => {
+    setSelectedPatient(patient);
+    setIsViewReportsOpen(true);
+    setLoadingReports(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('specialist_reports')
+        .select(`
+          *,
+          doctor:profiles!specialist_reports_doctor_id_fkey(full_name, specialization)
+        `)
+        .eq('patient_id', patient.id)
+        .order('exam_date', { ascending: false });
+
+      if (error) throw error;
+      setPatientReports(data || []);
+    } catch (error) {
+      console.error('Error fetching patient reports:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće učitati izveštaje pacijenta",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingReports(false);
+    }
+  };
+
+  const handlePrintReport = (report: PatientReport) => {
+    if (!selectedPatient) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const content = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Specijalistički Izveštaj</title>
+          <style>
+            body { 
+              font-family: 'Times New Roman', serif; 
+              padding: 40px;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 40px;
+              border-bottom: 2px solid #000;
+              padding-bottom: 20px;
+            }
+            .title { 
+              font-size: 24px; 
+              font-weight: bold;
+              margin-bottom: 10px;
+            }
+            .section { 
+              margin-bottom: 25px;
+            }
+            .section-title { 
+              font-weight: bold;
+              font-size: 16px;
+              margin-bottom: 10px;
+              text-decoration: underline;
+            }
+            .field { 
+              margin-bottom: 10px;
+              line-height: 1.6;
+            }
+            .field-label { 
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 60px;
+              text-align: right;
+            }
+            @media print {
+              body { padding: 20px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <button onclick="window.print()" style="padding: 10px 20px; margin-bottom: 20px; cursor: pointer;">
+            Štampaj
+          </button>
+          
+          <div class="header">
+            <div class="title">SPECIJALISTIČKI IZVEŠTAJ</div>
+          </div>
+
+          <div class="section">
+            <div class="field">
+              <span class="field-label">Pacijent:</span> ${selectedPatient.first_name} ${selectedPatient.last_name}
+            </div>
+            ${selectedPatient.date_of_birth ? `
+            <div class="field">
+              <span class="field-label">Datum rođenja:</span> ${format(new Date(selectedPatient.date_of_birth), 'dd.MM.yyyy')}
+            </div>
+            ` : ''}
+            ${selectedPatient.phone ? `
+            <div class="field">
+              <span class="field-label">Telefon:</span> ${selectedPatient.phone}
+            </div>
+            ` : ''}
+            <div class="field">
+              <span class="field-label">Datum pregleda:</span> ${format(new Date(report.exam_date), 'dd.MM.yyyy')}
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Anamneza:</div>
+            <div>${report.anamnesis || 'N/A'}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Objektivni nalaz:</div>
+            <div>${report.objective_findings || 'N/A'}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Dijagnoza:</div>
+            <div>${report.diagnosis || 'N/A'}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Terapija:</div>
+            <div>${report.therapy || 'N/A'}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Kontrola:</div>
+            <div>${report.control || 'N/A'}</div>
+          </div>
+
+          ${report.echo_findings ? `
+          <div class="section">
+            <div class="section-title">EHO nalaz:</div>
+            <div>${report.echo_findings}</div>
+          </div>
+          ` : ''}
+
+          ${report.lab_results ? `
+          <div class="section">
+            <div class="section-title">Laboratorijski nalazi:</div>
+            <div>${report.lab_results}</div>
+          </div>
+          ` : ''}
+
+          <div class="footer">
+            <div style="margin-bottom: 40px;">
+              <div><strong>${report.doctor.full_name}</strong></div>
+              <div>${report.doctor.specialization || 'Specijalista'}</div>
+            </div>
+            <div>_______________________</div>
+            <div style="margin-top: 5px;">Potpis i pečat</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
   };
 
   const filteredPatients = patients.filter(patient =>
@@ -397,6 +587,15 @@ const Patients = () => {
                       <Button
                         variant="glass"
                         size="sm"
+                        onClick={() => openReportsDialog(patient)}
+                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                        title="Pregled izveštaja"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="glass"
+                        size="sm"
                         onClick={() => openEditDialog(patient)}
                         className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
                       >
@@ -477,6 +676,76 @@ const Patients = () => {
                 Ažuriraj podatke
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Patient Reports Dialog */}
+        <Dialog open={isViewReportsOpen} onOpenChange={setIsViewReportsOpen}>
+          <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                Izveštaji pacijenta: {selectedPatient?.first_name} {selectedPatient?.last_name}
+              </DialogTitle>
+              <DialogDescription>
+                Svi specijalistički izveštaji za ovog pacijenta
+              </DialogDescription>
+            </DialogHeader>
+
+            {loadingReports ? (
+              <div className="text-center py-12">
+                <Activity className="h-8 w-8 animate-pulse text-primary mx-auto mb-4" />
+                <p className="text-muted-foreground">Učitavanje izveštaja...</p>
+              </div>
+            ) : patientReports.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Nema sačuvanih izveštaja za ovog pacijenta</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {patientReports.map((report) => (
+                  <Card key={report.id} className="bg-card border-border">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              <span>{format(new Date(report.exam_date), 'dd.MM.yyyy')}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-4 w-4" />
+                              <span>{report.doctor.full_name}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handlePrintReport(report)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {report.diagnosis && (
+                        <div className="mb-2">
+                          <span className="font-semibold text-foreground">Dijagnoza:</span>{' '}
+                          <span className="text-muted-foreground">{report.diagnosis}</span>
+                        </div>
+                      )}
+                      {report.therapy && (
+                        <div>
+                          <span className="font-semibold text-foreground">Terapija:</span>{' '}
+                          <span className="text-muted-foreground">{report.therapy}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </main>
