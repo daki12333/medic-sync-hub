@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Calendar,
   Plus,
@@ -65,6 +66,7 @@ const Appointments = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [timeConflict, setTimeConflict] = useState<{ hasConflict: boolean; conflictTime: string } | null>(null);
   
   const [appointmentForm, setAppointmentForm] = useState({
     patient_id: '',
@@ -84,6 +86,54 @@ const Appointments = () => {
       fetchData();
     }
   }, [user, loading, navigate]);
+
+  const checkTimeConflict = async (doctorId: string, date: string, time: string, duration: number, excludeId?: string) => {
+    if (!doctorId || !date || !time) {
+      setTimeConflict(null);
+      return;
+    }
+
+    try {
+      const [hours, minutes] = time.split(':').map(Number);
+      const selectedMinutes = hours * 60 + minutes;
+      const selectedEndMinutes = selectedMinutes + duration;
+
+      const { data: existingAppointments } = await supabase
+        .from('appointments')
+        .select('appointment_time, duration_minutes, id')
+        .eq('doctor_id', doctorId)
+        .eq('appointment_date', date)
+        .neq('status', 'cancelled');
+
+      if (existingAppointments && existingAppointments.length > 0) {
+        for (const apt of existingAppointments) {
+          if (excludeId && apt.id === excludeId) continue;
+
+          const [aptHours, aptMinutes] = apt.appointment_time.split(':').map(Number);
+          const aptStartMinutes = aptHours * 60 + aptMinutes;
+          const aptEndMinutes = aptStartMinutes + (apt.duration_minutes || 30);
+
+          // Check if times overlap
+          if (
+            (selectedMinutes >= aptStartMinutes && selectedMinutes < aptEndMinutes) ||
+            (selectedEndMinutes > aptStartMinutes && selectedEndMinutes <= aptEndMinutes) ||
+            (selectedMinutes <= aptStartMinutes && selectedEndMinutes >= aptEndMinutes)
+          ) {
+            setTimeConflict({
+              hasConflict: true,
+              conflictTime: apt.appointment_time
+            });
+            return;
+          }
+        }
+      }
+      
+      setTimeConflict(null);
+    } catch (error) {
+      console.error('Error checking time conflict:', error);
+      setTimeConflict(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -165,6 +215,15 @@ const Appointments = () => {
   };
 
   const createAppointment = async () => {
+    if (timeConflict?.hasConflict) {
+      toast({
+        title: "Greška",
+        description: "Ne možete zakazati termin u isto vreme kao već zakazan termin",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('appointments')
@@ -195,6 +254,15 @@ const Appointments = () => {
 
   const updateAppointment = async () => {
     if (!selectedAppointment) return;
+
+    if (timeConflict?.hasConflict) {
+      toast({
+        title: "Greška",
+        description: "Ne možete zakazati termin u isto vreme kao već zakazan termin",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -279,7 +347,23 @@ const Appointments = () => {
       duration_minutes: 30
     });
     setSelectedAppointment(null);
+    setTimeConflict(null);
   };
+
+  // Check for time conflicts when relevant fields change
+  useEffect(() => {
+    if (appointmentForm.doctor_id && appointmentForm.appointment_date && appointmentForm.appointment_time) {
+      checkTimeConflict(
+        appointmentForm.doctor_id,
+        appointmentForm.appointment_date,
+        appointmentForm.appointment_time,
+        appointmentForm.duration_minutes,
+        selectedAppointment?.id
+      );
+    } else {
+      setTimeConflict(null);
+    }
+  }, [appointmentForm.doctor_id, appointmentForm.appointment_date, appointmentForm.appointment_time, appointmentForm.duration_minutes]);
 
   const openEditDialog = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
@@ -427,8 +511,21 @@ const Appointments = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {timeConflict?.hasConflict && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      Upozorenje: Termin je već zakazan u {timeConflict.conflictTime}. Molimo izaberite drugo vreme.
+                    </AlertDescription>
+                  </Alert>
+                )}
                 
-                <Button onClick={createAppointment} className="w-full bg-gradient-medical hover:shadow-medical">
+                <Button 
+                  onClick={createAppointment} 
+                  className="w-full bg-gradient-medical hover:shadow-medical"
+                  disabled={timeConflict?.hasConflict}
+                >
                   Zakaži termin
                 </Button>
               </div>
@@ -612,8 +709,21 @@ const Appointments = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {timeConflict?.hasConflict && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Upozorenje: Termin je već zakazan u {timeConflict.conflictTime}. Molimo izaberite drugo vreme.
+                  </AlertDescription>
+                </Alert>
+              )}
               
-              <Button onClick={updateAppointment} className="w-full bg-gradient-medical hover:shadow-medical">
+              <Button 
+                onClick={updateAppointment} 
+                className="w-full bg-gradient-medical hover:shadow-medical"
+                disabled={timeConflict?.hasConflict}
+              >
                 Ažuriraj termin
               </Button>
             </div>
