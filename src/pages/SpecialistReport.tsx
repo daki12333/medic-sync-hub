@@ -51,6 +51,9 @@ const SpecialistReport = () => {
   const [showPatientSuggestions, setShowPatientSuggestions] = useState(false);
   const [showAddNewPatient, setShowAddNewPatient] = useState(false);
   
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
+  
   const [reportData, setReportData] = useState<ReportData>({
     patient_name: '',
     patient_dob: '',
