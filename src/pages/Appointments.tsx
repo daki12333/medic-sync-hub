@@ -68,6 +68,7 @@ const Appointments = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeConflict, setTimeConflict] = useState<{ hasConflict: boolean; conflictTime: string } | null>(null);
+  const [sortBy, setSortBy] = useState<'date' | 'time'>('date');
   
   const [appointmentForm, setAppointmentForm] = useState({
     patient_id: '',
@@ -378,6 +379,20 @@ const Appointments = () => {
     setIsEditAppointmentOpen(true);
   };
 
+  const sortAppointments = (appointments: Appointment[]) => {
+    return [...appointments].sort((a, b) => {
+      if (sortBy === 'date') {
+        // Sort by date first, then by time
+        const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
+        if (dateCompare !== 0) return dateCompare;
+        return a.appointment_time.localeCompare(b.appointment_time);
+      } else {
+        // Sort by time only
+        return a.appointment_time.localeCompare(b.appointment_time);
+      }
+    });
+  };
+
   const getStatusBadge = (status: Appointment['status']) => {
     const statusConfig = {
       scheduled: { color: 'bg-muted text-muted-foreground', text: 'Zakazano', icon: Clock },
@@ -546,24 +561,44 @@ const Appointments = () => {
 
           {/* All Appointments */}
           <TabsContent value="all" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                Svi termini
-              </h2>
-              <p className="text-muted-foreground">
-                {appointments.length} ukupno termina
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
+                  Svi termini
+                </h2>
+                <p className="text-muted-foreground">
+                  {appointments.length} ukupno termina
+                </p>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Label className="text-sm text-muted-foreground">Sortiraj:</Label>
+                <Select value={sortBy} onValueChange={(value: 'date' | 'time') => setSortBy(value)}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Po datumu</SelectItem>
+                    <SelectItem value="time">Po vremenu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid gap-4">
-              {appointments.map((appointment) => (
+              {sortAppointments(appointments).map((appointment) => (
                 <Card key={appointment.id} className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <CardContent className="p-6 relative z-10">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
-                        <div className="bg-primary/10 p-3 rounded-full group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-300">
-                          <Calendar className="h-5 w-5 text-primary" />
+                        <div className="bg-gradient-medical p-4 rounded-xl shadow-medical group-hover:scale-110 transition-all duration-300 flex flex-col items-center justify-center min-w-[80px]">
+                          <div className="text-2xl font-bold text-primary-foreground">
+                            {new Date(appointment.appointment_date).getDate()}
+                          </div>
+                          <div className="text-xs text-primary-foreground/90 uppercase">
+                            {new Date(appointment.appointment_date).toLocaleDateString('sr-RS', { month: 'short' })}
+                          </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
@@ -573,14 +608,11 @@ const Appointments = () => {
                             {getStatusBadge(appointment.status)}
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Calendar className="h-4 w-4" />
-                              <span>{new Date(appointment.appointment_date).toLocaleDateString('sr-RS')}</span>
-                            </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
                             <div className="flex items-center space-x-2">
                               <Clock className="h-4 w-4" />
-                              <span>{appointment.appointment_time} ({appointment.duration_minutes} min)</span>
+                              <span className="font-medium text-foreground">{appointment.appointment_time}</span>
+                              <span>({appointment.duration_minutes} min)</span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <User className="h-4 w-4" />
