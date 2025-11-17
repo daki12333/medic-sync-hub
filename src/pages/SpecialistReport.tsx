@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Printer, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
 
 interface Patient {
   id: string;
@@ -547,25 +547,22 @@ const SpecialistReport = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="doctor">Lekar</Label>
-            <Select 
-              value={selectedDoctorId} 
-              onValueChange={handleDoctorChange}
-              disabled={profile?.role === 'doctor'}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Izaberite lekara" />
-              </SelectTrigger>
-              <SelectContent>
-                {doctors.map((doctor) => (
-                  <SelectItem key={doctor.id} value={doctor.id}>
-                    {doctor.full_name} {doctor.specialization && `(${doctor.specialization})`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <DoctorSearchDropdown
+            value={selectedDoctorId}
+            onValueChange={(doctorId) => {
+              setSelectedDoctorId(doctorId);
+              const doctor = doctors.find(d => d.id === doctorId);
+              if (doctor) {
+                setReportData(prev => ({
+                  ...prev,
+                  doctor_name: doctor.full_name || '',
+                  doctor_specialization: doctor.specialization || ''
+                }));
+              }
+            }}
+            label="Lekar"
+            placeholder={profile?.role === 'doctor' ? reportData.doctor_name : "Pretraži lekare..."}
+          />
 
           {/* Anamnesis */}
           <div className="space-y-2">
