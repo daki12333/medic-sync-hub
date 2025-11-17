@@ -77,7 +77,17 @@ const SpecialistReport = () => {
       return;
     }
     fetchData();
-  }, [user, loading, navigate]);
+    
+    // Auto-select doctor if current user is a doctor
+    if (profile?.role === 'doctor' && user?.id) {
+      setSelectedDoctorId(user.id);
+      setReportData(prev => ({
+        ...prev,
+        doctor_name: profile.full_name || '',
+        doctor_specialization: profile.specialization || ''
+      }));
+    }
+  }, [user, profile, loading, navigate]);
 
   const fetchData = async () => {
     try {
@@ -537,10 +547,13 @@ const SpecialistReport = () => {
             />
           </div>
 
-          {/* Doctor Selection */}
           <div className="space-y-2">
             <Label htmlFor="doctor">Lekar</Label>
-            <Select onValueChange={handleDoctorChange}>
+            <Select 
+              value={selectedDoctorId} 
+              onValueChange={handleDoctorChange}
+              disabled={profile?.role === 'doctor'}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Izaberite lekara" />
               </SelectTrigger>

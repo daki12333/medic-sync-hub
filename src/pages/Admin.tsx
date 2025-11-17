@@ -54,6 +54,7 @@ const Admin = () => {
     password: '',
     full_name: '',
     role: 'doctor' as string,
+    specialization: ''
   });
 
   useEffect(() => {
@@ -109,6 +110,7 @@ const Admin = () => {
           password: newUser.password,
           full_name: newUser.full_name,
           role: newUser.role,
+          specialization: newUser.specialization
         }
       });
 
@@ -134,6 +136,7 @@ const Admin = () => {
         password: '',
         full_name: '',
         role: 'doctor',
+        specialization: ''
       });
       
       fetchData();
@@ -366,9 +369,16 @@ const Admin = () => {
                     </div>
                     
                     
-                    {(newUser.role === 'doctor' || newUser.role === 'nurse') && (
-                      <>
-                      </>
+                    {newUser.role === 'doctor' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="specialization">Specijalizacija</Label>
+                        <Input
+                          id="specialization"
+                          value={newUser.specialization}
+                          onChange={(e) => setNewUser(prev => ({ ...prev, specialization: e.target.value }))}
+                          placeholder="Kardiologija, Neurologija..."
+                        />
+                      </div>
                     )}
                     
                     <Button 

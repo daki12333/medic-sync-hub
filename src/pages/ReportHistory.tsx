@@ -89,7 +89,8 @@ const ReportHistory = () => {
   const fetchReports = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('specialist_reports')
         .select(`
           *,
@@ -97,6 +98,19 @@ const ReportHistory = () => {
           doctor:profiles!specialist_reports_doctor_id_fkey(full_name, specialization)
         `)
         .order('exam_date', { ascending: false });
+
+      // If user is a doctor (not admin), only show their reports
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user?.id)
+        .single();
+      
+      if (profileData?.role === 'doctor') {
+        query = query.eq('doctor_id', user?.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setReports(data || []);
