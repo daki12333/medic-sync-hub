@@ -172,16 +172,30 @@ const Patients = () => {
 
   const deletePatient = async (patientId: string) => {
     try {
+      // Prvo obriši povezane izveštaje
+      const { error: reportsError } = await supabase
+        .from('specialist_reports')
+        .delete()
+        .eq('patient_id', patientId);
+      if (reportsError) throw reportsError;
+
+      // Zatim obriši povezane termine
+      const { error: apptsError } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('patient_id', patientId);
+      if (apptsError) throw apptsError;
+
+      // Na kraju obriši pacijenta
       const { error } = await supabase
         .from('patients')
         .delete()
         .eq('id', patientId);
-
       if (error) throw error;
 
       toast({
         title: "Uspešno",
-        description: "Pacijent je trajno obrisan iz baze podataka",
+        description: "Pacijent i povezani podaci su trajno obrisani",
       });
 
       fetchPatients();
