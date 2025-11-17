@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
+import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Calendar,
@@ -460,21 +461,10 @@ const Appointments = () => {
                   }}
                 />
                 
-                <div className="space-y-2">
-                  <Label htmlFor="doctor_select">Lekar</Label>
-                  <Select value={appointmentForm.doctor_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, doctor_id: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Izaberite lekara" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-[100]">
-                      {doctors.map(doctor => (
-                        <SelectItem key={doctor.id} value={doctor.id}>
-                          {doctor.full_name} ({doctor.specialization})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <DoctorSearchDropdown
+                  value={appointmentForm.doctor_id}
+                  onValueChange={(doctorId) => setAppointmentForm(prev => ({ ...prev, doctor_id: doctorId }))}
+                />
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -658,21 +648,10 @@ const Appointments = () => {
                 }}
               />
               
-              <div className="space-y-2">
-                <Label htmlFor="doctor_select">Lekar</Label>
-                <Select value={appointmentForm.doctor_id} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, doctor_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Izaberite lekara" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border z-[100]">
-                    {doctors.map(doctor => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.full_name} ({doctor.specialization})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <DoctorSearchDropdown
+                value={appointmentForm.doctor_id}
+                onValueChange={(doctorId) => setAppointmentForm(prev => ({ ...prev, doctor_id: doctorId }))}
+              />
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
