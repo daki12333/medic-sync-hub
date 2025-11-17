@@ -148,11 +148,13 @@ export const DoctorSearchDropdown: React.FC<DoctorSearchDropdownProps> = ({
               onFocus={() => setIsOpen(true)}
               placeholder={placeholder}
               className="pr-8"
+              disabled={filteredDoctors.length === 0 && selectedDoctor !== null}
             />
             <button
               type="button"
               onClick={toggleDropdown}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              disabled={filteredDoctors.length === 0 && selectedDoctor !== null}
             >
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform duration-200",
@@ -162,37 +164,31 @@ export const DoctorSearchDropdown: React.FC<DoctorSearchDropdownProps> = ({
           </div>
         </div>
 
-        {isOpen && (
+        {isOpen && filteredDoctors.length > 0 && (
           <div className="absolute z-[100] w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-            {filteredDoctors.length === 0 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                Nema rezultata
-              </div>
-            ) : (
-              <div className="py-1">
-                {filteredDoctors.map((doctor) => (
-                  <button
-                    key={doctor.id}
-                    type="button"
-                    onClick={() => selectDoctor(doctor)}
-                    className={cn(
-                      "w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between",
-                      selectedDoctor?.id === doctor.id && "bg-accent"
+            <div className="py-1">
+              {filteredDoctors.map((doctor) => (
+                <button
+                  key={doctor.id}
+                  type="button"
+                  onClick={() => selectDoctor(doctor)}
+                  className={cn(
+                    "w-full px-4 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between",
+                    selectedDoctor?.id === doctor.id && "bg-accent"
+                  )}
+                >
+                  <div>
+                    <div className="font-medium">{doctor.full_name}</div>
+                    {doctor.specialization && (
+                      <div className="text-xs text-muted-foreground">{doctor.specialization}</div>
                     )}
-                  >
-                    <div>
-                      <div className="font-medium">{doctor.full_name}</div>
-                      {doctor.specialization && (
-                        <div className="text-xs text-muted-foreground">{doctor.specialization}</div>
-                      )}
-                    </div>
-                    {selectedDoctor?.id === doctor.id && (
-                      <Check className="h-4 w-4 text-primary" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+                  </div>
+                  {selectedDoctor?.id === doctor.id && (
+                    <Check className="h-4 w-4 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </div>
