@@ -174,21 +174,21 @@ const Patients = () => {
     try {
       const { error } = await supabase
         .from('patients')
-        .update({ is_active: false })
+        .delete()
         .eq('id', patientId);
 
       if (error) throw error;
 
       toast({
         title: "Uspešno",
-        description: "Pacijent je uklonjen iz aktivne liste",
+        description: "Pacijent je trajno obrisan iz baze podataka",
       });
 
       fetchPatients();
     } catch (error: any) {
       toast({
         title: "Greška",
-        description: error.message || "Nije moguće ukloniti pacijenta",
+        description: error.message || "Nije moguće obrisati pacijenta",
         variant: "destructive",
       });
     }
