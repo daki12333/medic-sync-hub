@@ -148,13 +148,13 @@ export const DoctorSearchDropdown: React.FC<DoctorSearchDropdownProps> = ({
               onFocus={() => setIsOpen(true)}
               placeholder={placeholder}
               className="pr-8"
-              disabled={filteredDoctors.length === 0 && selectedDoctor !== null}
+              disabled={doctors.length === 0}
             />
             <button
               type="button"
               onClick={toggleDropdown}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              disabled={filteredDoctors.length === 0 && selectedDoctor !== null}
+              disabled={doctors.length === 0}
             >
               <ChevronDown className={cn(
                 "h-4 w-4 transition-transform duration-200",
