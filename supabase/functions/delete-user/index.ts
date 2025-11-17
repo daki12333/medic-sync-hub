@@ -88,40 +88,6 @@ serve(async (req) => {
       )
     }
 
-    // Delete calendar permissions where the user is the subject
-    const { error: calPermUserError } = await supabaseClient
-      .from('calendar_permissions')
-      .delete()
-      .eq('user_id', user_id)
-
-    if (calPermUserError) {
-      console.error('❌ Calendar permissions (user) delete error:', calPermUserError)
-      return new Response(
-        JSON.stringify({ error: calPermUserError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Delete calendar permissions created by this user (if any)
-    const { error: calPermCreatorError } = await supabaseClient
-      .from('calendar_permissions')
-      .delete()
-      .eq('created_by', user_id)
-
-    if (calPermCreatorError) {
-      console.error('❌ Calendar permissions (creator) delete error:', calPermCreatorError)
-      return new Response(
-        JSON.stringify({ error: calPermCreatorError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
     console.log('🧹 Related records cleaned, now deleting auth user...')
 
     // Now delete the user from auth.users
