@@ -411,26 +411,7 @@ const Admin = () => {
                         </div>
                       </div>
                       
-                       <div className="flex items-center space-x-2">
-                         <Button
-                           variant={profile.is_active ? "outline" : "default"}
-                           size="sm"
-                           onClick={() => toggleUserStatus(profile.id, profile.is_active)}
-                           className="transition-all duration-200"
-                         >
-                           {profile.is_active ? (
-                             <>
-                               <EyeOff className="h-4 w-4 mr-1" />
-                               Deaktiviraj
-                             </>
-                           ) : (
-                             <>
-                               <Eye className="h-4 w-4 mr-1" />
-                               Aktiviraj
-                             </>
-                           )}
-                         </Button>
-                         
+                      <div className="flex items-center space-x-2">
                          <Button
                            variant="destructive"
                            size="sm"

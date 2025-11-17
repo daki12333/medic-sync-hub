@@ -9,12 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
 import {
   Users,
   UserPlus,
   ArrowLeft,
   Activity,
-  Search,
   Edit,
   Trash2,
   Phone,
@@ -55,7 +55,7 @@ const Patients = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [isCreatePatientOpen, setIsCreatePatientOpen] = useState(false);
   const [isEditPatientOpen, setIsEditPatientOpen] = useState(false);
   const [isViewReportsOpen, setIsViewReportsOpen] = useState(false);
@@ -498,10 +498,18 @@ const Patients = () => {
     };
   };
 
-  const filteredPatients = patients.filter(patient =>
-    `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    patient.phone?.includes(searchQuery)
-  );
+  const handleSearch = (patientId: string) => {
+    if (patientId) {
+      const filtered = patients.filter(p => p.id === patientId);
+      setFilteredPatients(filtered);
+    } else {
+      setFilteredPatients(patients);
+    }
+  };
+
+  useEffect(() => {
+    setFilteredPatients(patients);
+  }, [patients]);
 
   if (loading || loadingData) {
     return (
@@ -613,15 +621,13 @@ const Patients = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Search Bar */}
         <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Pretraži pacijente po imenu ili telefonu..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 transition-all duration-200 focus:shadow-medical"
-            />
-          </div>
+          <PatientSearchDropdown
+            value=""
+            onValueChange={handleSearch}
+            onAddNewPatient={() => setIsCreatePatientOpen(true)}
+            placeholder="Pretraži pacijente..."
+            label="Pretraga pacijenata"
+          />
         </div>
 
         {/* Statistics */}
@@ -652,18 +658,16 @@ const Patients = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Nema pacijenata</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchQuery ? 'Nema rezultata za zadatu pretragu.' : 'Još uvek niste dodali nijednog pacijenta.'}
+                  Još uvek niste dodali nijednog pacijenta.
                 </p>
-                {!searchQuery && (
-                  <Button 
-                    onClick={() => setIsCreatePatientOpen(true)}
-                    variant="premium"
-                    className="btn-float"
-                  >
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Dodaj prvog pacijenta
-                  </Button>
-                )}
+                <Button 
+                  onClick={() => setIsCreatePatientOpen(true)}
+                  variant="premium"
+                  className="btn-float"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Dodaj prvog pacijenta
+                </Button>
               </CardContent>
             </Card>
           ) : (
