@@ -601,23 +601,22 @@ const Appointments = () => {
                           </div>
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
+                          <div className="flex items-center space-x-3 mb-3">
                             <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
                               {appointment.patients.first_name} {appointment.patients.last_name}
                             </h3>
                             {getStatusBadge(appointment.status)}
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-muted-foreground mb-2">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
-                              <span className="font-medium text-foreground">{appointment.appointment_time}</span>
-                              <span>({appointment.duration_minutes} min)</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <User className="h-4 w-4" />
-                              <span>Dr {appointment.doctor.full_name}</span>
-                            </div>
+                          <div className="flex items-center space-x-2 mb-3">
+                            <Clock className="h-5 w-5 text-primary" />
+                            <span className="text-2xl font-bold text-foreground">{appointment.appointment_time}</span>
+                            <span className="text-sm text-muted-foreground ml-2">({appointment.duration_minutes} min)</span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                            <User className="h-4 w-4" />
+                            <span>Dr {appointment.doctor.full_name}</span>
                           </div>
                         </div>
                       </div>
