@@ -16,7 +16,7 @@ enable_signup = true
 enable_anonymous_sign_ins = false
 
 [functions.create-user]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-user]
-verify_jwt = false
+verify_jwt = true
