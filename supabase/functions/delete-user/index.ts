@@ -17,11 +17,25 @@ serve(async (req) => {
   }
 
   try {
+    // Verify admin authorization
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      console.error('❌ Missing authorization header')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Missing authorization header' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     console.log('🔧 Creating Supabase client...')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
     
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey || !supabaseAnonKey) {
       console.error('❌ Missing environment variables')
       return new Response(
         JSON.stringify({ error: 'Missing environment configuration' }),
@@ -31,6 +45,46 @@ serve(async (req) => {
         }
       )
     }
+
+    // Create client with user's JWT to check their role
+    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader }
+      }
+    })
+
+    // Check if user is admin
+    console.log('🔐 Checking admin role...')
+    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+    
+    if (userError || !user) {
+      console.error('❌ Invalid authorization token')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const { data: isAdmin, error: roleError } = await supabaseUserClient.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    })
+
+    if (roleError || !isAdmin) {
+      console.error('❌ User is not an admin')
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: Admin role required' }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log('✅ Admin authorization verified')
 
     const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
