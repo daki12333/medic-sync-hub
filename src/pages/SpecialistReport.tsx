@@ -86,8 +86,6 @@ const SpecialistReport = () => {
     doctor_specialization: ''
   });
   
-  const [icdCodes, setIcdCodes] = useState<ICDCode[]>([]);
-  const [isClassifying, setIsClassifying] = useState(false);
   
   const [diagnosisSuggestions, setDiagnosisSuggestions] = useState<DiagnosisSuggestion[]>([]);
   const [showDiagnosisSuggestions, setShowDiagnosisSuggestions] = useState(false);
@@ -329,47 +327,6 @@ const SpecialistReport = () => {
     }
 
     try {
-      setIsClassifying(true);
-      
-      // Classify diagnosis with AI if diagnosis is provided
-      let classifiedCodes: ICDCode[] = [];
-      if (reportData.diagnosis) {
-        try {
-          const { data: icdData, error: icdError } = await supabase.functions.invoke('classify-icd', {
-            body: {
-              diagnosis: reportData.diagnosis,
-              anamnesis: reportData.anamnesis,
-              objectiveFindings: reportData.objective_findings
-            }
-          });
-
-          if (icdError) {
-            console.error('ICD classification error:', icdError);
-            toast({
-              title: "Upozorenje",
-              description: "ICD klasifikacija nije uspela, izveštaj će biti sačuvan bez ICD kodova.",
-              variant: "default",
-            });
-          } else if (icdData?.codes) {
-            classifiedCodes = icdData.codes;
-            setIcdCodes(classifiedCodes);
-            toast({
-              title: "ICD Kodovi Klasifikovani",
-              description: `Pronađeno ${classifiedCodes.length} ICD-10 koda.`,
-            });
-          }
-        } catch (icdError) {
-          console.error('ICD classification failed:', icdError);
-          toast({
-            title: "Upozorenje",
-            description: "ICD klasifikacija nije dostupna.",
-            variant: "default",
-          });
-        }
-      }
-      
-      setIsClassifying(false);
-
       // Save to database
       const { error } = await supabase
         .from('specialist_reports')
@@ -394,11 +351,10 @@ const SpecialistReport = () => {
         description: "Izveštaj je sačuvan.",
       });
 
-      // Continue with printing with ICD codes
-      handlePrint(classifiedCodes);
+      // Continue with printing
+      handlePrint();
     } catch (error) {
       console.error('Error saving report:', error);
-      setIsClassifying(false);
       toast({
         title: "Greška",
         description: "Nije moguće sačuvati izveštaj.",
@@ -407,7 +363,7 @@ const SpecialistReport = () => {
     }
   };
 
-  const handlePrint = (icdCodesToPrint: ICDCode[] = icdCodes) => {
+  const handlePrint = () => {
     // Open print window
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
@@ -656,17 +612,6 @@ const SpecialistReport = () => {
           <div class="section">
             <div class="section-title">Dijagnoza</div>
             <div class="text-content">${reportData.diagnosis || ''}</div>
-            ${icdCodesToPrint && icdCodesToPrint.length > 0 ? `
-              <div class="icd-codes">
-                <div class="icd-title">ICD-10 Klasifikacija</div>
-                ${icdCodesToPrint.map(icd => `
-                  <div class="icd-item">
-                    <span class="icd-code">${icd.code}</span>
-                    <span class="icd-description">${icd.description}</span>
-                  </div>
-                `).join('')}
-              </div>
-            ` : ''}
           </div>
           
           <div class="section">
@@ -970,11 +915,11 @@ const SpecialistReport = () => {
           <div className="flex justify-end pt-4">
             <Button 
               onClick={handleSaveAndPrint}
-              disabled={!reportData.patient_name || !reportData.doctor_name || isClassifying}
+              disabled={!reportData.patient_name || !reportData.doctor_name}
               className="flex items-center space-x-2"
             >
               <Printer className="h-4 w-4" />
-              <span>{isClassifying ? 'Klasifikacija ICD kodova...' : 'Sačuvaj i Štampaj'}</span>
+              <span>Sačuvaj i Štampaj</span>
             </Button>
           </div>
         </CardContent>
