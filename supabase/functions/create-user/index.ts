@@ -50,19 +50,12 @@ serve(async (req) => {
       )
     }
 
-    // Create client with user's JWT to check their role
-    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader }
-      }
-    })
+    // Extract user ID from JWT token (already verified by verify_jwt=true)
+    const token = authHeader.replace('Bearer ', '').trim()
+    const base64Url = token.split('.')[1]
 
-    // Check if user is admin
-    console.log('🔐 Checking admin role...')
-    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
-    
-    if (userError || !user) {
-      console.error('❌ Invalid authorization token')
+    if (!base64Url) {
+      console.error('❌ JWT token missing payload segment')
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Invalid token' }),
         { 
@@ -72,12 +65,45 @@ serve(async (req) => {
       )
     }
 
-    const { data: isAdmin, error: roleError } = await supabaseUserClient.rpc('has_role', {
-      _user_id: user.id,
+    // Convert from base64url to base64
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base64Url.length / 4) * 4, '=')
+    const payloadJson = atob(base64)
+    const payload = JSON.parse(payloadJson)
+    const adminUserId = payload.sub as string | undefined
+    
+    if (!adminUserId) {
+      console.error('❌ Could not extract admin user ID from token payload', payload)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Create service role client
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
+
+    // Check if caller is admin
+    console.log('🔐 Checking admin role for user:', adminUserId)
+    const { data: isAdmin, error: roleError } = await supabaseClient.rpc('has_role', {
+      _user_id: adminUserId,
       _role: 'admin'
     })
 
-    if (roleError || !isAdmin) {
+    if (roleError) {
+      console.error('❌ Error checking admin role:', roleError)
+      return new Response(
+        JSON.stringify({ error: roleError.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!isAdmin) {
       console.error('❌ User is not an admin')
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin role required' }),
@@ -89,8 +115,6 @@ serve(async (req) => {
     }
 
     console.log('✅ Admin authorization verified')
-
-    const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
     // Get the request body
     console.log('📝 Reading request body...')
