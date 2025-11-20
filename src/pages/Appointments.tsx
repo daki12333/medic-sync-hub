@@ -71,6 +71,7 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeConflict, setTimeConflict] = useState<{ hasConflict: boolean; conflictTime: string } | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'time'>('date');
+  const [selectedDoctorFilter, setSelectedDoctorFilter] = useState<string>('all');
   
   const [appointmentForm, setAppointmentForm] = useState({
     patient_id: '',
@@ -381,8 +382,15 @@ const Appointments = () => {
     setIsEditAppointmentOpen(true);
   };
 
-  const sortAppointments = (appointments: Appointment[]) => {
-    return [...appointments].sort((a, b) => {
+  const filterAndSortAppointments = (appointments: Appointment[]) => {
+    // First filter by doctor
+    let filtered = appointments;
+    if (selectedDoctorFilter !== 'all') {
+      filtered = appointments.filter(apt => apt.doctor_id === selectedDoctorFilter);
+    }
+    
+    // Then sort
+    return [...filtered].sort((a, b) => {
       if (sortBy === 'date') {
         // Sort by date first, then by time
         const dateCompare = a.appointment_date.localeCompare(b.appointment_date);
@@ -551,6 +559,23 @@ const Appointments = () => {
             </TabsList>
             
             <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="doctor_filter">Lekar:</Label>
+                <Select value={selectedDoctorFilter} onValueChange={setSelectedDoctorFilter}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Svi lekari</SelectItem>
+                    {doctors.map((doctor) => (
+                      <SelectItem key={doctor.id} value={doctor.id}>
+                        Dr {doctor.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <Label htmlFor="date_picker">Datum:</Label>
               <DatePicker
                 date={selectedDate ? new Date(selectedDate) : new Date()}
@@ -568,7 +593,7 @@ const Appointments = () => {
                   Svi termini
                 </h2>
                 <p className="text-muted-foreground">
-                  {appointments.length} ukupno termina
+                  {filterAndSortAppointments(appointments).length} {selectedDoctorFilter !== 'all' ? 'filtriranih' : 'ukupno'} termina
                 </p>
               </div>
               
@@ -587,7 +612,7 @@ const Appointments = () => {
             </div>
 
             <div className="grid gap-4">
-              {sortAppointments(appointments).map((appointment) => (
+              {filterAndSortAppointments(appointments).map((appointment) => (
                 <Card key={appointment.id} className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <CardContent className="p-6 relative z-10">
@@ -645,7 +670,7 @@ const Appointments = () => {
                 </Card>
               ))}
 
-              {appointments.length === 0 && (
+              {filterAndSortAppointments(appointments).length === 0 && (
                 <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
                   <CardContent className="p-12 text-center">
                     <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
