@@ -130,9 +130,22 @@ export const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      {!hideLabel && (
+      {!hideLabel ? (
         <div className="flex items-center justify-between mb-2">
           <Label htmlFor="patient-search">{label}</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onAddNewPatient}
+            className="text-xs"
+          >
+            <UserPlus className="h-3 w-3 mr-1" />
+            Dodaj novog
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-end mb-2">
           <Button
             type="button"
             variant="outline"
