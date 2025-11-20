@@ -46,19 +46,13 @@ serve(async (req) => {
       )
     }
 
-    // Create client with user's JWT to check their role
-    const supabaseUserClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: authHeader }
-      }
-    })
-
-    // Check if user is admin
-    console.log('🔐 Checking admin role...')
-    const { data: { user }, error: userError } = await supabaseUserClient.auth.getUser()
+    // Extract user ID from JWT token (already verified by verify_jwt=true)
+    const token = authHeader.replace('Bearer ', '')
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const userId = payload.sub
     
-    if (userError || !user) {
-      console.error('❌ Invalid authorization token')
+    if (!userId) {
+      console.error('❌ Could not extract user ID from token')
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Invalid token' }),
         { 
@@ -68,8 +62,13 @@ serve(async (req) => {
       )
     }
 
-    const { data: isAdmin, error: roleError } = await supabaseUserClient.rpc('has_role', {
-      _user_id: user.id,
+    // Create service role client to check admin role
+    const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
+
+    // Check if user is admin
+    console.log('🔐 Checking admin role...')
+    const { data: isAdmin, error: roleError } = await supabaseClient.rpc('has_role', {
+      _user_id: userId,
       _role: 'admin'
     })
 
@@ -85,8 +84,6 @@ serve(async (req) => {
     }
 
     console.log('✅ Admin authorization verified')
-
-    const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
     // Get the request body
     console.log('📝 Reading request body...')
