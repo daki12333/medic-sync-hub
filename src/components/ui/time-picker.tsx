@@ -45,7 +45,18 @@ export function TimePicker({ time, onTimeChange, className }: TimePickerProps) {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    let value = e.target.value.replace(/[^0-9:]/g, '') // Only allow numbers and colon
+    
+    // Auto-add colon after 2 digits
+    if (value.length === 2 && !value.includes(':')) {
+      value = value + ':'
+    }
+    
+    // Prevent more than 5 characters (HH:MM)
+    if (value.length > 5) {
+      value = value.slice(0, 5)
+    }
+    
     setInputValue(value)
     
     // Validate time format (HH:MM)
