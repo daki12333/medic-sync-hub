@@ -660,23 +660,21 @@ const Appointments = () => {
               <TabsTrigger value="all">Svi termini</TabsTrigger>
             </TabsList>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Label htmlFor="patient_filter" className="whitespace-nowrap">Pacijent:</Label>
-                <div className="w-full sm:w-[250px]">
-                  <PatientSearchDropdown
-                    value={selectedPatientFilter}
-                    onValueChange={setSelectedPatientFilter}
-                    onAddNewPatient={() => navigate('/patients')}
-                    placeholder="Svi pacijenti"
-                  />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="space-y-2">
+                <Label htmlFor="patient_filter">Pacijent</Label>
+                <PatientSearchDropdown
+                  value={selectedPatientFilter}
+                  onValueChange={setSelectedPatientFilter}
+                  onAddNewPatient={() => navigate('/patients')}
+                  placeholder="Svi pacijenti"
+                />
               </div>
               
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Label htmlFor="doctor_filter" className="whitespace-nowrap">Lekar:</Label>
+              <div className="space-y-2">
+                <Label htmlFor="doctor_filter">Lekar</Label>
                 <Select value={selectedDoctorFilter} onValueChange={setSelectedDoctorFilter}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -690,12 +688,12 @@ const Appointments = () => {
                 </Select>
               </div>
               
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Label htmlFor="date_picker" className="whitespace-nowrap">Datum:</Label>
+              <div className="space-y-2">
+                <Label htmlFor="date_picker">Datum</Label>
                 <DatePicker
                   date={selectedDate ? new Date(selectedDate) : new Date()}
                   onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
-                  className="w-full sm:w-[200px]"
+                  className="w-full"
                 />
               </div>
             </div>
