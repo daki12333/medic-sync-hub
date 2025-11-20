@@ -76,6 +76,7 @@ const Appointments = () => {
   const [timeConflict, setTimeConflict] = useState<{ hasConflict: boolean; conflictTime: string } | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'time'>('date');
   const [selectedDoctorFilter, setSelectedDoctorFilter] = useState<string>('all');
+  const [selectedPatientFilter, setSelectedPatientFilter] = useState<string>('');
   
   const [appointmentForm, setAppointmentForm] = useState({
     patient_id: '',
@@ -390,7 +391,12 @@ const Appointments = () => {
     // First filter by doctor
     let filtered = appointments;
     if (selectedDoctorFilter !== 'all') {
-      filtered = appointments.filter(apt => apt.doctor_id === selectedDoctorFilter);
+      filtered = filtered.filter(apt => apt.doctor_id === selectedDoctorFilter);
+    }
+    
+    // Then filter by patient
+    if (selectedPatientFilter) {
+      filtered = filtered.filter(apt => apt.patient_id === selectedPatientFilter);
     }
     
     // Then sort
@@ -654,11 +660,23 @@ const Appointments = () => {
               <TabsTrigger value="all">Svi termini</TabsTrigger>
             </TabsList>
             
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="doctor_filter">Lekar:</Label>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Label htmlFor="patient_filter" className="whitespace-nowrap">Pacijent:</Label>
+                <div className="w-full sm:w-[250px]">
+                  <PatientSearchDropdown
+                    value={selectedPatientFilter}
+                    onValueChange={setSelectedPatientFilter}
+                    onAddNewPatient={() => navigate('/patients')}
+                    placeholder="Svi pacijenti"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Label htmlFor="doctor_filter" className="whitespace-nowrap">Lekar:</Label>
                 <Select value={selectedDoctorFilter} onValueChange={setSelectedDoctorFilter}>
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-full sm:w-[200px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -672,12 +690,14 @@ const Appointments = () => {
                 </Select>
               </div>
               
-              <Label htmlFor="date_picker">Datum:</Label>
-              <DatePicker
-                date={selectedDate ? new Date(selectedDate) : new Date()}
-                onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
-                className="w-[240px]"
-              />
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Label htmlFor="date_picker" className="whitespace-nowrap">Datum:</Label>
+                <DatePicker
+                  date={selectedDate ? new Date(selectedDate) : new Date()}
+                  onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
+                  className="w-full sm:w-[200px]"
+                />
+              </div>
             </div>
           </div>
 
