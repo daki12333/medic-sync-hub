@@ -469,7 +469,7 @@ const Appointments = () => {
                 Zakaži termin
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Zakazivanje novog termina</DialogTitle>
                 <DialogDescription>
@@ -687,7 +687,7 @@ const Appointments = () => {
 
         {/* Edit Appointment Dialog */}
         <Dialog open={isEditAppointmentOpen} onOpenChange={setIsEditAppointmentOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Ažuriranje termina</DialogTitle>
               <DialogDescription>
