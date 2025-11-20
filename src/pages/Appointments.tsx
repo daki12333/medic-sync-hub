@@ -732,7 +732,7 @@ const Appointments = () => {
                           
                           <div className="flex items-center space-x-2 mb-3">
                             <Clock className="h-5 w-5 text-primary" />
-                            <span className="text-2xl font-bold text-foreground">{appointment.appointment_time}</span>
+                            <span className="text-2xl font-bold text-foreground">{appointment.appointment_time.substring(0, 5)}</span>
                             <span className="text-sm text-muted-foreground ml-2">({appointment.duration_minutes} min)</span>
                           </div>
                           
