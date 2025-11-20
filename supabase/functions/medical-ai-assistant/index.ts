@@ -25,7 +25,8 @@ serve(async (req) => {
     if (type === "diagnosis") {
       systemPrompt = `Ti si iskusan lekar specijalizovan za dijagnostiku. 
 Tvoj zadatak je da na osnovu simptoma, anamneze i objektivnog nalaza predložiš 3-5 mogućih dijagnoza sa ICD-10 kodovima.
-Dijagnoze treba da budu poređane po verovatnoći (od najverovatnije ka najmanje verovatnoj).`;
+Dijagnoze treba da budu poređane po verovatnoći (od najverovatnije ka najmanje verovatnoj).
+VAŽNO: Objašnjenje mora biti maksimalno 2 kratke rečenice.`;
 
       userPrompt = `Na osnovu sledećih podataka predloži dijagnoze:
 ${symptoms ? `\nSimptomi: ${symptoms}` : ''}
@@ -86,7 +87,7 @@ ${objectiveFindings ? `\nObjektivni nalaz: ${objectiveFindings}` : ''}`;
 
       systemPrompt = `Ti si iskusan lekar specijalizovan za farmakoterapiju.
 Tvoj zadatak je da na osnovu dijagnoze predložiš odgovarajuću terapiju prema važećim medicinskim protokolima.
-Uvek navedi generički naziv leka, dozu, način primene i trajanje terapije.`;
+VAŽNO: Odgovor mora biti maksimalno 3 rečenice - kratko i jasno samo lekove, dozu i trajanje.`;
 
       userPrompt = `Predloži terapiju za sledeću dijagnozu:
 Dijagnoza: ${diagnosis}
@@ -97,21 +98,17 @@ ${anamnesis ? `\nAnamneza: ${anamnesis}` : ''}`;
         function: {
           name: "suggest_therapy",
           description: "Predloži terapiju",
-          parameters: {
-            type: "object",
-            properties: {
-              therapy: {
-                type: "string",
-                description: "Detaljan predlog terapije sa lekovima, dozama i trajanjem"
-              },
-              lifestyle_recommendations: {
-                type: "string",
-                description: "Preporuke za promenu životnih navika"
+              parameters: {
+                type: "object",
+                properties: {
+                  therapy: {
+                    type: "string",
+                    description: "Kratka terapija u maksimalno 3 rečenice - samo lekovi, doze i trajanje"
+                  }
+                },
+                required: ["therapy"],
+                additionalProperties: false
               }
-            },
-            required: ["therapy"],
-            additionalProperties: false
-          }
         }
       };
 
