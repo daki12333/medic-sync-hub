@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Printer, Plus } from 'lucide-react';
+import { ArrowLeft, Printer, Plus, Sparkles, Check, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
 
@@ -46,6 +46,23 @@ interface ICDCode {
   description: string;
 }
 
+interface DiagnosisSuggestion {
+  diagnosis: string;
+  icd_code: string;
+  probability: "visoka" | "srednja" | "niska";
+  explanation: string;
+}
+
+interface TherapySuggestion {
+  therapy: string;
+  lifestyle_recommendations?: string;
+}
+
+interface ControlSuggestion {
+  control_plan: string;
+  timeline?: string;
+}
+
 const SpecialistReport = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -77,6 +94,20 @@ const SpecialistReport = () => {
   
   const [icdCodes, setIcdCodes] = useState<ICDCode[]>([]);
   const [isClassifying, setIsClassifying] = useState(false);
+  
+  const [diagnosisSuggestions, setDiagnosisSuggestions] = useState<DiagnosisSuggestion[]>([]);
+  const [showDiagnosisSuggestions, setShowDiagnosisSuggestions] = useState(false);
+  const [isLoadingDiagnosis, setIsLoadingDiagnosis] = useState(false);
+  
+  const [therapySuggestion, setTherapySuggestion] = useState<TherapySuggestion | null>(null);
+  const [showTherapySuggestion, setShowTherapySuggestion] = useState(false);
+  const [isLoadingTherapy, setIsLoadingTherapy] = useState(false);
+  
+  const [controlSuggestion, setControlSuggestion] = useState<ControlSuggestion | null>(null);
+  const [showControlSuggestion, setShowControlSuggestion] = useState(false);
+  const [isLoadingControl, setIsLoadingControl] = useState(false);
+  
+  const [symptoms, setSymptoms] = useState('');
 
   useEffect(() => {
     if (loading) return;
@@ -178,6 +209,182 @@ const SpecialistReport = () => {
 
   const handleAddNewPatient = () => {
     navigate('/patients', { state: { addNew: true, patientName: reportData.patient_name } });
+  };
+
+  const handleGetDiagnosisSuggestions = async () => {
+    if (!symptoms && !reportData.anamnesis && !reportData.objective_findings) {
+      toast({
+        title: "Nedostaju podaci",
+        description: "Molimo unesite simptome, anamnezu ili objektivni nalaz.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingDiagnosis(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('medical-ai-assistant', {
+        body: {
+          type: 'diagnosis',
+          symptoms,
+          anamnesis: reportData.anamnesis,
+          objectiveFindings: reportData.objective_findings
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data?.suggestions) {
+        setDiagnosisSuggestions(data.suggestions);
+        setShowDiagnosisSuggestions(true);
+        toast({
+          title: "AI Predlozi spremni",
+          description: `Pronađeno ${data.suggestions.length} mogućih dijagnoza.`,
+        });
+      }
+    } catch (error) {
+      console.error('Diagnosis suggestion error:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće dobiti predloge dijagnoza.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingDiagnosis(false);
+    }
+  };
+
+  const handleAcceptDiagnosis = (suggestion: DiagnosisSuggestion) => {
+    setReportData(prev => ({
+      ...prev,
+      diagnosis: `${suggestion.diagnosis} (${suggestion.icd_code})\n\n${suggestion.explanation}`
+    }));
+    setShowDiagnosisSuggestions(false);
+    toast({
+      title: "Dijagnoza prihvaćena",
+      description: "Dijagnoza je dodata u izveštaj.",
+    });
+  };
+
+  const handleGetTherapySuggestion = async () => {
+    if (!reportData.diagnosis) {
+      toast({
+        title: "Nedostaje dijagnoza",
+        description: "Molimo prvo unesite dijagnozu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingTherapy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('medical-ai-assistant', {
+        body: {
+          type: 'therapy',
+          diagnosis: reportData.diagnosis,
+          anamnesis: reportData.anamnesis
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data) {
+        setTherapySuggestion(data);
+        setShowTherapySuggestion(true);
+        toast({
+          title: "AI Predlog spreman",
+          description: "Terapija je predložena.",
+        });
+      }
+    } catch (error) {
+      console.error('Therapy suggestion error:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće dobiti predlog terapije.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingTherapy(false);
+    }
+  };
+
+  const handleAcceptTherapy = () => {
+    if (!therapySuggestion) return;
+    
+    let therapyText = therapySuggestion.therapy;
+    if (therapySuggestion.lifestyle_recommendations) {
+      therapyText += `\n\nPreporuke za životne navike:\n${therapySuggestion.lifestyle_recommendations}`;
+    }
+    
+    setReportData(prev => ({
+      ...prev,
+      therapy: therapyText
+    }));
+    setShowTherapySuggestion(false);
+    toast({
+      title: "Terapija prihvaćena",
+      description: "Terapija je dodata u izveštaj.",
+    });
+  };
+
+  const handleGetControlSuggestion = async () => {
+    if (!reportData.diagnosis) {
+      toast({
+        title: "Nedostaje dijagnoza",
+        description: "Molimo prvo unesite dijagnozu.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingControl(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('medical-ai-assistant', {
+        body: {
+          type: 'control',
+          diagnosis: reportData.diagnosis
+        }
+      });
+
+      if (error) throw error;
+      
+      if (data) {
+        setControlSuggestion(data);
+        setShowControlSuggestion(true);
+        toast({
+          title: "AI Predlog spreman",
+          description: "Plan kontrole je predložen.",
+        });
+      }
+    } catch (error) {
+      console.error('Control suggestion error:', error);
+      toast({
+        title: "Greška",
+        description: "Nije moguće dobiti predlog kontrole.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingControl(false);
+    }
+  };
+
+  const handleAcceptControl = () => {
+    if (!controlSuggestion) return;
+    
+    let controlText = controlSuggestion.control_plan;
+    if (controlSuggestion.timeline) {
+      controlText += `\n\nVremenski okvir: ${controlSuggestion.timeline}`;
+    }
+    
+    setReportData(prev => ({
+      ...prev,
+      control: controlText
+    }));
+    setShowControlSuggestion(false);
+    toast({
+      title: "Kontrola prihvaćena",
+      description: "Plan kontrole je dodat u izveštaj.",
+    });
   };
 
   const handleSaveAndPrint = async () => {
@@ -665,6 +872,18 @@ const SpecialistReport = () => {
             placeholder={profile?.role === 'doctor' ? reportData.doctor_name : "Pretraži lekare..."}
           />
 
+          {/* Symptoms - NEW FIELD */}
+          <div className="space-y-2">
+            <Label htmlFor="symptoms">Simptomi</Label>
+            <Textarea
+              id="symptoms"
+              value={symptoms}
+              onChange={(e) => setSymptoms(e.target.value)}
+              placeholder="Opišite simptome koje pacijent oseća..."
+              rows={3}
+            />
+          </div>
+
           {/* Anamnesis */}
           <div className="space-y-2">
             <Label htmlFor="anamnesis">Anamneza</Label>
@@ -691,7 +910,20 @@ const SpecialistReport = () => {
 
           {/* Diagnosis */}
           <div className="space-y-2">
-            <Label htmlFor="diagnosis">Dijagnoza</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="diagnosis">Dijagnoza</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGetDiagnosisSuggestions}
+                disabled={isLoadingDiagnosis || (!symptoms && !reportData.anamnesis && !reportData.objective_findings)}
+                className="flex items-center gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                {isLoadingDiagnosis ? 'AI razmišlja...' : 'AI Predlog'}
+              </Button>
+            </div>
             <Textarea
               id="diagnosis"
               value={reportData.diagnosis}
@@ -699,11 +931,75 @@ const SpecialistReport = () => {
               placeholder="Dijagnoza"
               rows={2}
             />
+            
+            {/* Diagnosis Suggestions Dialog */}
+            {showDiagnosisSuggestions && diagnosisSuggestions.length > 0 && (
+              <div className="mt-2 p-4 border border-primary rounded-lg bg-accent/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Predlozi Dijagnoza
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDiagnosisSuggestions(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                {diagnosisSuggestions.map((suggestion, index) => (
+                  <div key={index} className="p-3 bg-background rounded border border-border hover:border-primary transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm">{suggestion.diagnosis}</span>
+                          <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-mono">
+                            {suggestion.icd_code}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            suggestion.probability === 'visoka' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
+                            suggestion.probability === 'srednja' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
+                            'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                          }`}>
+                            {suggestion.probability}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{suggestion.explanation}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => handleAcceptDiagnosis(suggestion)}
+                        className="flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" />
+                        Prihvati
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Therapy */}
           <div className="space-y-2">
-            <Label htmlFor="therapy">Terapija</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="therapy">Terapija</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGetTherapySuggestion}
+                disabled={isLoadingTherapy || !reportData.diagnosis}
+                className="flex items-center gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                {isLoadingTherapy ? 'AI razmišlja...' : 'AI Predlog'}
+              </Button>
+            </div>
             <Textarea
               id="therapy"
               value={reportData.therapy}
@@ -711,6 +1007,49 @@ const SpecialistReport = () => {
               placeholder="Terapija"
               rows={3}
             />
+            
+            {/* Therapy Suggestion Dialog */}
+            {showTherapySuggestion && therapySuggestion && (
+              <div className="mt-2 p-4 border border-primary rounded-lg bg-accent/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Predlog Terapije
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowTherapySuggestion(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="p-3 bg-background rounded border border-border">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium mb-1">Predložena terapija:</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{therapySuggestion.therapy}</p>
+                    </div>
+                    {therapySuggestion.lifestyle_recommendations && (
+                      <div>
+                        <p className="text-sm font-medium mb-1">Preporuke za životne navike:</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{therapySuggestion.lifestyle_recommendations}</p>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAcceptTherapy}
+                      className="flex items-center gap-1 w-full"
+                    >
+                      <Check className="h-3 w-3" />
+                      Prihvati Terapiju
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Lab Results */}
@@ -721,6 +1060,86 @@ const SpecialistReport = () => {
               value={reportData.lab_results}
               onChange={(e) => setReportData(prev => ({ ...prev, lab_results: e.target.value }))}
               placeholder="SE CRP KS glyc,hol,trig urea,kreat K,Na Fe bil,lak fosf,gama GT,ALT,AST Urin"
+              rows={2}
+            />
+          </div>
+
+          {/* Control - NEW FIELD */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="control">Kontrola</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleGetControlSuggestion}
+                disabled={isLoadingControl || !reportData.diagnosis}
+                className="flex items-center gap-2"
+              >
+                <Sparkles className="h-4 w-4" />
+                {isLoadingControl ? 'AI razmišlja...' : 'AI Predlog'}
+              </Button>
+            </div>
+            <Textarea
+              id="control"
+              value={reportData.control}
+              onChange={(e) => setReportData(prev => ({ ...prev, control: e.target.value }))}
+              placeholder="Plan kontrole i praćenja"
+              rows={2}
+            />
+            
+            {/* Control Suggestion Dialog */}
+            {showControlSuggestion && controlSuggestion && (
+              <div className="mt-2 p-4 border border-primary rounded-lg bg-accent/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Predlog Kontrole
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowControlSuggestion(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="p-3 bg-background rounded border border-border">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm font-medium mb-1">Predloženi plan kontrole:</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">{controlSuggestion.control_plan}</p>
+                    </div>
+                    {controlSuggestion.timeline && (
+                      <div>
+                        <p className="text-sm font-medium mb-1">Vremenski okvir:</p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-line">{controlSuggestion.timeline}</p>
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAcceptControl}
+                      className="flex items-center gap-1 w-full"
+                    >
+                      <Check className="h-3 w-3" />
+                      Prihvati Plan Kontrole
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Echo Findings */}
+          <div className="space-y-2">
+            <Label htmlFor="echo_findings">EHO nalaz</Label>
+            <Textarea
+              id="echo_findings"
+              value={reportData.echo_findings}
+              onChange={(e) => setReportData(prev => ({ ...prev, echo_findings: e.target.value }))}
+              placeholder="Nalazi ehokardiografije ili drugih EHO pregleda"
               rows={2}
             />
           </div>
