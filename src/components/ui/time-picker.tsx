@@ -93,15 +93,16 @@ export function TimePicker({ time, onTimeChange, className }: TimePickerProps) {
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <ScrollArea className="h-[280px]">
-          <div className="p-2 pr-4">
+      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+        <ScrollArea className="h-[280px] w-[140px]">
+          <div className="p-2">
             {timeOptions.map((timeOption) => (
               <button
                 key={timeOption}
+                type="button"
                 onClick={() => handleTimeSelect(timeOption)}
                 className={cn(
-                  "w-full text-left px-3 py-2 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
+                  "w-full text-left px-3 py-2.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer",
                   time === timeOption && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
                 )}
               >
