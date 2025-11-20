@@ -15,6 +15,7 @@ import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
 import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
+import { TimePicker } from '@/components/ui/time-picker';
 import { format } from 'date-fns';
 import {
   Calendar,
@@ -504,11 +505,10 @@ const Appointments = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="appointment_time">Vreme</Label>
-                    <Input
-                      id="appointment_time"
-                      type="time"
-                      value={appointmentForm.appointment_time}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_time: e.target.value }))}
+                    <TimePicker
+                      time={appointmentForm.appointment_time}
+                      onTimeChange={(time) => setAppointmentForm(prev => ({ ...prev, appointment_time: time }))}
+                      className="w-full"
                     />
                   </div>
                 </div>
@@ -723,11 +723,10 @@ const Appointments = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="appointment_time">Vreme</Label>
-                  <Input
-                    id="appointment_time"
-                    type="time"
-                    value={appointmentForm.appointment_time}
-                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_time: e.target.value }))}
+                  <TimePicker
+                    time={appointmentForm.appointment_time}
+                    onTimeChange={(time) => setAppointmentForm(prev => ({ ...prev, appointment_time: time }))}
+                    className="w-full"
                   />
                 </div>
               </div>
