@@ -41,6 +41,11 @@ interface ReportData {
   doctor_specialization: string;
 }
 
+interface ICDCode {
+  code: string;
+  description: string;
+}
+
 const SpecialistReport = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -69,6 +74,9 @@ const SpecialistReport = () => {
     doctor_name: '',
     doctor_specialization: ''
   });
+  
+  const [icdCodes, setIcdCodes] = useState<ICDCode[]>([]);
+  const [isClassifying, setIsClassifying] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -192,6 +200,47 @@ const SpecialistReport = () => {
     }
 
     try {
+      setIsClassifying(true);
+      
+      // Classify diagnosis with AI if diagnosis is provided
+      let classifiedCodes: ICDCode[] = [];
+      if (reportData.diagnosis) {
+        try {
+          const { data: icdData, error: icdError } = await supabase.functions.invoke('classify-icd', {
+            body: {
+              diagnosis: reportData.diagnosis,
+              anamnesis: reportData.anamnesis,
+              objectiveFindings: reportData.objective_findings
+            }
+          });
+
+          if (icdError) {
+            console.error('ICD classification error:', icdError);
+            toast({
+              title: "Upozorenje",
+              description: "ICD klasifikacija nije uspela, izveštaj će biti sačuvan bez ICD kodova.",
+              variant: "default",
+            });
+          } else if (icdData?.codes) {
+            classifiedCodes = icdData.codes;
+            setIcdCodes(classifiedCodes);
+            toast({
+              title: "ICD Kodovi Klasifikovani",
+              description: `Pronađeno ${classifiedCodes.length} ICD-10 koda.`,
+            });
+          }
+        } catch (icdError) {
+          console.error('ICD classification failed:', icdError);
+          toast({
+            title: "Upozorenje",
+            description: "ICD klasifikacija nije dostupna.",
+            variant: "default",
+          });
+        }
+      }
+      
+      setIsClassifying(false);
+
       // Save to database
       const { error } = await supabase
         .from('specialist_reports')
@@ -216,10 +265,11 @@ const SpecialistReport = () => {
         description: "Izveštaj je sačuvan.",
       });
 
-      // Continue with printing
-      handlePrint();
+      // Continue with printing with ICD codes
+      handlePrint(classifiedCodes);
     } catch (error) {
       console.error('Error saving report:', error);
+      setIsClassifying(false);
       toast({
         title: "Greška",
         description: "Nije moguće sačuvati izveštaj.",
@@ -228,7 +278,7 @@ const SpecialistReport = () => {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = (icdCodesToPrint: ICDCode[] = icdCodes) => {
     // Open print window
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (!printWindow) return;
@@ -357,6 +407,46 @@ const SpecialistReport = () => {
             break-inside: avoid;
           }
           
+          .icd-codes {
+            background: #f7fafc;
+            border: 2px solid #3182ce;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          .icd-title {
+            font-weight: 800;
+            font-size: 14px;
+            color: #1a365d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .icd-item {
+            margin: 6px 0;
+            padding: 6px;
+            background: white;
+            border-left: 3px solid #3182ce;
+            padding-left: 10px;
+          }
+          
+          .icd-code {
+            font-weight: 700;
+            color: #2c5282;
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+          }
+          
+          .icd-description {
+            color: #2d3748;
+            font-size: 14px;
+            margin-left: 8px;
+          }
+          
           .footer {
             margin-top: 30px;
             padding: 8px 0;
@@ -437,6 +527,17 @@ const SpecialistReport = () => {
           <div class="section">
             <div class="section-title">Dijagnoza</div>
             <div class="text-content">${reportData.diagnosis || ''}</div>
+            ${icdCodesToPrint && icdCodesToPrint.length > 0 ? `
+              <div class="icd-codes">
+                <div class="icd-title">ICD-10 Klasifikacija</div>
+                ${icdCodesToPrint.map(icd => `
+                  <div class="icd-item">
+                    <span class="icd-code">${icd.code}</span>
+                    <span class="icd-description">${icd.description}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
           
           <div class="section">
@@ -628,11 +729,11 @@ const SpecialistReport = () => {
           <div className="flex justify-end pt-4">
             <Button 
               onClick={handleSaveAndPrint}
-              disabled={!reportData.patient_name || !reportData.doctor_name}
+              disabled={!reportData.patient_name || !reportData.doctor_name || isClassifying}
               className="flex items-center space-x-2"
             >
               <Printer className="h-4 w-4" />
-              <span>Sačuvaj i Štampaj</span>
+              <span>{isClassifying ? 'Klasifikacija ICD kodova...' : 'Sačuvaj i Štampaj'}</span>
             </Button>
           </div>
         </CardContent>

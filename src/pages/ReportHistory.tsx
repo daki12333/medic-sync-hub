@@ -51,6 +51,11 @@ interface Patient {
   last_name: string;
 }
 
+interface ICDCode {
+  code: string;
+  description: string;
+}
+
 const ReportHistory = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
@@ -205,7 +210,36 @@ const ReportHistory = () => {
     }
   };
 
-  const handlePrint = (report: Report) => {
+  const handlePrint = async (report: Report) => {
+    // Classify diagnosis with AI if diagnosis exists
+    let icdCodes: ICDCode[] = [];
+    if (report.diagnosis) {
+      try {
+        toast({
+          title: "ICD Klasifikacija",
+          description: "Klasifikujem dijagnozu...",
+        });
+
+        const { data: icdData, error: icdError } = await supabase.functions.invoke('classify-icd', {
+          body: {
+            diagnosis: report.diagnosis,
+            anamnesis: report.anamnesis,
+            objectiveFindings: report.objective_findings
+          }
+        });
+
+        if (!icdError && icdData?.codes) {
+          icdCodes = icdData.codes;
+          toast({
+            title: "ICD Kodovi Klasifikovani",
+            description: `Pronađeno ${icdCodes.length} ICD-10 koda.`,
+          });
+        }
+      } catch (error) {
+        console.error('ICD classification failed:', error);
+      }
+    }
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -326,6 +360,46 @@ const ReportHistory = () => {
             break-inside: avoid;
           }
           
+          .icd-codes {
+            background: #f7fafc;
+            border: 2px solid #3182ce;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          
+          .icd-title {
+            font-weight: 800;
+            font-size: 14px;
+            color: #1a365d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .icd-item {
+            margin: 6px 0;
+            padding: 6px;
+            background: white;
+            border-left: 3px solid #3182ce;
+            padding-left: 10px;
+          }
+          
+          .icd-code {
+            font-weight: 700;
+            color: #2c5282;
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+          }
+          
+          .icd-description {
+            color: #2d3748;
+            font-size: 14px;
+            margin-left: 8px;
+          }
+          
           .footer {
             margin-top: 30px;
             padding: 8px 0;
@@ -398,6 +472,17 @@ const ReportHistory = () => {
           ${report.diagnosis ? `<div class="section">
             <div class="section-title">Dijagnoza</div>
             <div class="text-content">${report.diagnosis}</div>
+            ${icdCodes && icdCodes.length > 0 ? `
+              <div class="icd-codes">
+                <div class="icd-title">ICD-10 Klasifikacija</div>
+                ${icdCodes.map(icd => `
+                  <div class="icd-item">
+                    <span class="icd-code">${icd.code}</span>
+                    <span class="icd-description">${icd.description}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>` : ''}
           
           ${report.therapy ? `<div class="section">
