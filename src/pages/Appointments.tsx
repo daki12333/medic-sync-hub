@@ -659,7 +659,7 @@ const Appointments = () => {
             <TabsTrigger value="all">Svi termini</TabsTrigger>
           </TabsList>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="patient_filter">Pacijent</Label>
               <PatientSearchDropdown
@@ -667,6 +667,7 @@ const Appointments = () => {
                 onValueChange={setSelectedPatientFilter}
                 onAddNewPatient={() => navigate('/patients')}
                 placeholder="Svi pacijenti"
+                hideLabel={true}
               />
             </div>
             
@@ -685,15 +686,6 @@ const Appointments = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="date_picker">Datum</Label>
-              <DatePicker
-                date={selectedDate ? new Date(selectedDate) : new Date()}
-                onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
-                className="w-full"
-              />
             </div>
           </div>
 
