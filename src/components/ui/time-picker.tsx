@@ -1,13 +1,6 @@
 import * as React from "react"
-import { Clock } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 interface TimePickerProps {
   time?: string
@@ -16,112 +9,60 @@ interface TimePickerProps {
 }
 
 export function TimePicker({ time, onTimeChange, className }: TimePickerProps) {
-  const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(time || "")
   
   React.useEffect(() => {
     setInputValue(time || "")
   }, [time])
-  
-  // Generate time options from 10:00 to 22:00 (every 15 minutes)
-  const generateTimeOptions = () => {
-    const times: string[] = []
-    for (let hour = 10; hour <= 22; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        if (hour === 22 && minute > 0) break; // Stop at 22:00
-        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        times.push(timeString)
-      }
-    }
-    return times
-  }
-
-  const timeOptions = generateTimeOptions()
-
-  const handleTimeSelect = (selectedTime: string) => {
-    setInputValue(selectedTime)
-    onTimeChange(selectedTime)
-    setOpen(false)
-  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9:]/g, '') // Only allow numbers and colon
-    
-    // Auto-add colon after 2 digits
-    if (value.length === 2 && !value.includes(':')) {
-      value = value + ':'
+    let raw = e.target.value
+    // Keep only digits
+    let value = raw.replace(/[^0-9]/g, "")
+
+    // Auto-insert colon after 2 digits
+    if (value.length > 2) {
+      value = value.slice(0, 4) // max 4 digits before formatting
+      value = `${value.slice(0, 2)}:${value.slice(2)}`
     }
-    
-    // Prevent more than 5 characters (HH:MM)
-    if (value.length > 5) {
-      value = value.slice(0, 5)
+
+    // If user deleted back to only hour (2 digits), remove colon
+    if (value.length <= 2) {
+      value = value.slice(0, 2)
     }
-    
+
     setInputValue(value)
-    
-    // Validate time format (HH:MM)
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/
+
+    // Validate time format HH:MM when full length
+    const timeRegex = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/
     if (timeRegex.test(value)) {
       onTimeChange(value)
     }
   }
 
   const handleInputBlur = () => {
-    // Format the input if it's valid
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/
+    const timeRegex = /^([0-1][0-9]|2[0-3]):([0-5][0-9])$/
+    if (!inputValue) return
+
     if (timeRegex.test(inputValue)) {
-      const [hours, minutes] = inputValue.split(':')
-      const formattedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`
+      const [hours, minutes] = inputValue.split(":")
+      const formattedTime = `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`
       setInputValue(formattedTime)
       onTimeChange(formattedTime)
-    } else if (inputValue) {
+    } else {
       // Reset to previous valid value if invalid
       setInputValue(time || "")
     }
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <div className="relative">
-          <Input
-            value={inputValue}
-            onChange={handleInputChange}
-            onBlur={handleInputBlur}
-            placeholder="HH:MM"
-            className={cn("pr-10", className)}
-            maxLength={5}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setOpen(!open)}
-          >
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </Button>
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="max-h-72 w-40 overflow-y-auto">
-          <div className="p-2">
-            {timeOptions.map((timeOption) => (
-              <button
-                key={timeOption}
-                type="button"
-                onClick={() => handleTimeSelect(timeOption)}
-                className={cn(
-                  "w-full text-left px-3 py-2.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer",
-                  time === timeOption && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
-                )}
-              >
-                {timeOption}
-              </button>
-            ))}
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+    <Input
+      value={inputValue}
+      onChange={handleInputChange}
+      onBlur={handleInputBlur}
+      placeholder="HH:MM"
+      className={cn(className)}
+      maxLength={5}
+    />
   )
 }
