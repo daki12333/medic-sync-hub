@@ -460,6 +460,14 @@ const ReportHistory = () => {
             <div class="section-title" style="color: #c05621; margin-bottom: 10px;">Laboratorijski nalazi</div>
             <div class="text-content" style="color: #744210;">${report.lab_results}</div>
           </div>` : ''}
+          
+          <div class="footer">
+            <div class="signature-line"></div>
+            <div class="doctor-signature">
+              ${report.doctor.full_name}
+              ${report.doctor.specialization ? `<br><span style="font-size: 14px; font-weight: 500; color: #4a5568;">${report.doctor.specialization}</span>` : ''}
+            </div>
+          </div>
         </div>
       </body>
       </html>
