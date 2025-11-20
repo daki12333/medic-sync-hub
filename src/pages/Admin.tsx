@@ -410,17 +410,9 @@ const Admin = () => {
                           <h3 className="text-lg font-semibold text-foreground">
                             {profile.full_name || 'Bez imena'}
                           </h3>
-                          <p className="text-sm text-muted-foreground">{profile.email}</p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge className={`text-xs ${getRoleBadgeColor(profile.role)}`}>
-                              {getRoleText(profile.role)}
-                            </Badge>
-                            {profile.specialization && (
-                              <Badge variant="outline" className="text-xs">
-                                {profile.specialization}
-                              </Badge>
-                            )}
-                          </div>
+                          {profile.specialization && (
+                            <p className="text-sm text-muted-foreground">{profile.specialization}</p>
+                          )}
                         </div>
                       </div>
                       
