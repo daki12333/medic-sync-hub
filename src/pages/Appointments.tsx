@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
 import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
@@ -17,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DatePicker } from '@/components/ui/date-picker';
 import { TimePicker } from '@/components/ui/time-picker';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Calendar,
   Plus,
@@ -62,6 +64,7 @@ const Appointments = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -462,91 +465,184 @@ const Appointments = () => {
             </div>
           </div>
           
-          <Dialog open={isCreateAppointmentOpen} onOpenChange={setIsCreateAppointmentOpen}>
-            <DialogTrigger asChild>
-              <Button variant="premium" className="btn-float">
-                <Plus className="h-4 w-4 mr-2" />
-                Zakaži termin
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Zakazivanje novog termina</DialogTitle>
-                <DialogDescription>
-                  Unesite podatke za novi termin
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <PatientSearchDropdown
-                  value={appointmentForm.patient_id}
-                  onValueChange={(patientId) => setAppointmentForm(prev => ({ ...prev, patient_id: patientId }))}
-                  onAddNewPatient={() => {
-                    setIsCreateAppointmentOpen(false);
-                    navigate('/patients');
-                  }}
-                />
-                
-                <DoctorSearchDropdown
-                  value={appointmentForm.doctor_id}
-                  onValueChange={(doctorId) => setAppointmentForm(prev => ({ ...prev, doctor_id: doctorId }))}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="appointment_date">Datum</Label>
-                    <DatePicker
-                      date={appointmentForm.appointment_date ? new Date(appointmentForm.appointment_date) : undefined}
-                      onDateChange={(date) => setAppointmentForm(prev => ({ 
-                        ...prev, 
-                        appointment_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
-                      }))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="appointment_time">Vreme</Label>
-                    <TimePicker
-                      time={appointmentForm.appointment_time}
-                      onTimeChange={(time) => setAppointmentForm(prev => ({ ...prev, appointment_time: time }))}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="duration">Trajanje (minuti)</Label>
-                  <Select value={appointmentForm.duration_minutes.toString()} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="20">20 minuta</SelectItem>
-                      <SelectItem value="30">30 minuta</SelectItem>
-                      <SelectItem value="45">45 minuta</SelectItem>
-                      <SelectItem value="60">60 minuta</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {timeConflict?.hasConflict && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      Upozorenje: Termin je već zakazan u {timeConflict.conflictTime}. Molimo izaberite drugo vreme.
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                <Button 
-                  onClick={createAppointment} 
-                  className="w-full bg-gradient-medical hover:shadow-medical"
-                  disabled={timeConflict?.hasConflict}
-                >
+          {isMobile ? (
+            <Drawer open={isCreateAppointmentOpen} onOpenChange={setIsCreateAppointmentOpen}>
+              <DrawerTrigger asChild>
+                <Button variant="premium" className="btn-float">
+                  <Plus className="h-4 w-4 mr-2" />
                   Zakaži termin
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DrawerTrigger>
+              <DrawerContent className="px-4 pb-8">
+                <DrawerHeader>
+                  <DrawerTitle>Zakazivanje novog termina</DrawerTitle>
+                  <DrawerDescription>
+                    Unesite podatke za novi termin
+                  </DrawerDescription>
+                </DrawerHeader>
+                
+                <div className="space-y-4 mt-4 max-h-[60vh] overflow-y-auto px-1">
+                  <PatientSearchDropdown
+                    value={appointmentForm.patient_id}
+                    onValueChange={(patientId) => setAppointmentForm(prev => ({ ...prev, patient_id: patientId }))}
+                    onAddNewPatient={() => {
+                      setIsCreateAppointmentOpen(false);
+                      navigate('/patients');
+                    }}
+                  />
+                  
+                  <DoctorSearchDropdown
+                    value={appointmentForm.doctor_id}
+                    onValueChange={(doctorId) => setAppointmentForm(prev => ({ ...prev, doctor_id: doctorId }))}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="appointment_date">Datum</Label>
+                      <DatePicker
+                        date={appointmentForm.appointment_date ? new Date(appointmentForm.appointment_date) : undefined}
+                        onDateChange={(date) => setAppointmentForm(prev => ({ 
+                          ...prev, 
+                          appointment_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
+                        }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="appointment_time">Vreme</Label>
+                      <TimePicker
+                        time={appointmentForm.appointment_time}
+                        onTimeChange={(time) => setAppointmentForm(prev => ({ ...prev, appointment_time: time }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Trajanje (minuti)</Label>
+                    <Select value={appointmentForm.duration_minutes.toString()} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="20">20 minuta</SelectItem>
+                        <SelectItem value="30">30 minuta</SelectItem>
+                        <SelectItem value="45">45 minuta</SelectItem>
+                        <SelectItem value="60">60 minuta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {timeConflict?.hasConflict && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Upozorenje: Termin je već zakazan u {timeConflict.conflictTime}. Molimo izaberite drugo vreme.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+                
+                <DrawerFooter className="pt-4">
+                  <Button 
+                    onClick={createAppointment} 
+                    className="w-full bg-gradient-medical hover:shadow-medical"
+                    disabled={timeConflict?.hasConflict}
+                  >
+                    Zakaži termin
+                  </Button>
+                  <DrawerClose asChild>
+                    <Button variant="outline" className="w-full">Otkaži</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <Dialog open={isCreateAppointmentOpen} onOpenChange={setIsCreateAppointmentOpen}>
+              <DialogTrigger asChild>
+                <Button variant="premium" className="btn-float">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Zakaži termin
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Zakazivanje novog termina</DialogTitle>
+                  <DialogDescription>
+                    Unesite podatke za novi termin
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <PatientSearchDropdown
+                    value={appointmentForm.patient_id}
+                    onValueChange={(patientId) => setAppointmentForm(prev => ({ ...prev, patient_id: patientId }))}
+                    onAddNewPatient={() => {
+                      setIsCreateAppointmentOpen(false);
+                      navigate('/patients');
+                    }}
+                  />
+                  
+                  <DoctorSearchDropdown
+                    value={appointmentForm.doctor_id}
+                    onValueChange={(doctorId) => setAppointmentForm(prev => ({ ...prev, doctor_id: doctorId }))}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="appointment_date">Datum</Label>
+                      <DatePicker
+                        date={appointmentForm.appointment_date ? new Date(appointmentForm.appointment_date) : undefined}
+                        onDateChange={(date) => setAppointmentForm(prev => ({ 
+                          ...prev, 
+                          appointment_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
+                        }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="appointment_time">Vreme</Label>
+                      <TimePicker
+                        time={appointmentForm.appointment_time}
+                        onTimeChange={(time) => setAppointmentForm(prev => ({ ...prev, appointment_time: time }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Trajanje (minuti)</Label>
+                    <Select value={appointmentForm.duration_minutes.toString()} onValueChange={(value) => setAppointmentForm(prev => ({ ...prev, duration_minutes: parseInt(value) }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="20">20 minuta</SelectItem>
+                        <SelectItem value="30">30 minuta</SelectItem>
+                        <SelectItem value="45">45 minuta</SelectItem>
+                        <SelectItem value="60">60 minuta</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {timeConflict?.hasConflict && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Upozorenje: Termin je već zakazan u {timeConflict.conflictTime}. Molimo izaberite drugo vreme.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <Button 
+                    onClick={createAppointment} 
+                    className="w-full bg-gradient-medical hover:shadow-medical"
+                    disabled={timeConflict?.hasConflict}
+                  >
+                    Zakaži termin
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </header>
 
