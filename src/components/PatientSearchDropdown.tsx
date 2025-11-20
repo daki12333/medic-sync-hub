@@ -18,6 +18,7 @@ interface PatientSearchDropdownProps {
   onAddNewPatient: () => void;
   placeholder?: string;
   label?: string;
+  hideLabel?: boolean;
 }
 
 export const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
@@ -25,7 +26,8 @@ export const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
   onValueChange,
   onAddNewPatient,
   placeholder = "Pretraži pacijente...",
-  label = "Pacijent"
+  label = "Pacijent",
+  hideLabel = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -128,19 +130,21 @@ export const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
 
   return (
     <div ref={dropdownRef} className="relative w-full">
-      <div className="flex items-center justify-between mb-2">
-        <Label htmlFor="patient-search">{label}</Label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onAddNewPatient}
-          className="text-xs"
-        >
-          <UserPlus className="h-3 w-3 mr-1" />
-          Dodaj novog
-        </Button>
-      </div>
+      {!hideLabel && (
+        <div className="flex items-center justify-between mb-2">
+          <Label htmlFor="patient-search">{label}</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onAddNewPatient}
+            className="text-xs"
+          >
+            <UserPlus className="h-3 w-3 mr-1" />
+            Dodaj novog
+          </Button>
+        </div>
+      )}
 
       <div className="relative">
         <div className="flex">
