@@ -740,27 +740,29 @@ const Appointments = () => {
                             <User className="h-4 w-4" />
                             <span>Dr {appointment.doctor.full_name}</span>
                           </div>
-                        </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => openEditDialog(appointment)}
-                          className="hover:shadow-card transition-all duration-200"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteAppointment(appointment.id)}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:space-x-2">
+                      <Button
+                        variant="outline"
+                        size={isMobile ? "default" : "sm"}
+                        onClick={() => openEditDialog(appointment)}
+                        className="hover:shadow-card transition-all duration-200 w-full sm:w-auto"
+                      >
+                        <Edit className="h-4 w-4 sm:mr-0" />
+                        {isMobile && <span className="ml-2">Izmeni</span>}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size={isMobile ? "default" : "sm"}
+                        onClick={() => deleteAppointment(appointment.id)}
+                        className="text-destructive hover:bg-destructive/10 w-full sm:w-auto"
+                      >
+                        <Trash2 className="h-4 w-4 sm:mr-0" />
+                        {isMobile && <span className="ml-2">Obriši</span>}
+                      </Button>
+                    </div>
                     </div>
                   </CardContent>
                 </Card>
