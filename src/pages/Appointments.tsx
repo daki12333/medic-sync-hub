@@ -655,47 +655,45 @@ const Appointments = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="all" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="all">Svi termini</TabsTrigger>
-            </TabsList>
+          <TabsList>
+            <TabsTrigger value="all">Svi termini</TabsTrigger>
+          </TabsList>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient_filter">Pacijent</Label>
+              <PatientSearchDropdown
+                value={selectedPatientFilter}
+                onValueChange={setSelectedPatientFilter}
+                onAddNewPatient={() => navigate('/patients')}
+                placeholder="Svi pacijenti"
+              />
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label htmlFor="patient_filter">Pacijent</Label>
-                <PatientSearchDropdown
-                  value={selectedPatientFilter}
-                  onValueChange={setSelectedPatientFilter}
-                  onAddNewPatient={() => navigate('/patients')}
-                  placeholder="Svi pacijenti"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="doctor_filter">Lekar</Label>
-                <Select value={selectedDoctorFilter} onValueChange={setSelectedDoctorFilter}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Svi lekari</SelectItem>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        Dr {doctor.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="date_picker">Datum</Label>
-                <DatePicker
-                  date={selectedDate ? new Date(selectedDate) : new Date()}
-                  onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
-                  className="w-full"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="doctor_filter">Lekar</Label>
+              <Select value={selectedDoctorFilter} onValueChange={setSelectedDoctorFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Svi lekari</SelectItem>
+                  {doctors.map((doctor) => (
+                    <SelectItem key={doctor.id} value={doctor.id}>
+                      Dr {doctor.full_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="date_picker">Datum</Label>
+              <DatePicker
+                date={selectedDate ? new Date(selectedDate) : new Date()}
+                onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
+                className="w-full"
+              />
             </div>
           </div>
 
