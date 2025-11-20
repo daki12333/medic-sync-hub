@@ -568,7 +568,7 @@ const Patients = () => {
               </DialogHeader>
               
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first_name">Ime *</Label>
                     <Input
@@ -591,7 +591,7 @@ const Patients = () => {
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date_of_birth">Datum rođenja</Label>
                     <DatePicker
@@ -601,6 +601,7 @@ const Patients = () => {
                         date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
                       }))}
                       placeholder="Izaberite datum rođenja"
+                      className="w-full"
                     />
                   </div>
                   <div className="space-y-2">
@@ -756,7 +757,7 @@ const Patients = () => {
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_first_name">Ime *</Label>
                   <Input
@@ -779,7 +780,7 @@ const Patients = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_date_of_birth">Datum rođenja</Label>
                   <DatePicker
@@ -789,6 +790,7 @@ const Patients = () => {
                       date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
                     }))}
                     placeholder="Izaberite datum rođenja"
+                    className="w-full"
                   />
                 </div>
                 <div className="space-y-2">
