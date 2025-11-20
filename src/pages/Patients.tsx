@@ -681,8 +681,8 @@ const Patients = () => {
               <Card key={patient.id} className="card-professional group shadow-glass border-border/20 overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <CardContent className="p-6 relative z-10">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                    <div className="flex-1 w-full">
                       <div className="flex items-center space-x-3 mb-3">
                         <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
                           {patient.first_name} {patient.last_name}
@@ -692,47 +692,50 @@ const Patients = () => {
                         </Badge>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-muted-foreground">
+                      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 text-sm text-muted-foreground">
                         {patient.date_of_birth && (
                           <div className="flex items-center space-x-2 group-hover:text-primary/70 transition-colors duration-300">
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4 flex-shrink-0" />
                             <span>Rođen: {new Date(patient.date_of_birth).toLocaleDateString('sr-RS')}</span>
                           </div>
                         )}
                         {patient.phone && (
                           <div className="flex items-center space-x-2 group-hover:text-primary/70 transition-colors duration-300">
-                            <Phone className="h-4 w-4" />
+                            <Phone className="h-4 w-4 flex-shrink-0" />
                             <span>{patient.phone}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     
-                    <div className="flex space-x-2 ml-4">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       <Button
                         variant="glass"
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         onClick={() => openReportsDialog(patient)}
-                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start"
                         title="Pregled izveštaja"
                       >
                         <FileText className="h-4 w-4" />
+                        {isMobile && <span className="ml-2">Izveštaji</span>}
                       </Button>
                       <Button
                         variant="glass"
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         onClick={() => openEditDialog(patient)}
-                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                        className="hover:bg-primary/10 hover:text-primary transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start"
                       >
                         <Edit className="h-4 w-4" />
+                        {isMobile && <span className="ml-2">Izmeni</span>}
                       </Button>
                       <Button
                         variant="glass"
-                        size="sm"
+                        size={isMobile ? "default" : "sm"}
                         onClick={() => deletePatient(patient.id)}
-                        className="hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+                        className="hover:bg-destructive/10 hover:text-destructive transition-all duration-300 w-full sm:w-auto justify-center sm:justify-start"
                       >
                         <Trash2 className="h-4 w-4" />
+                        {isMobile && <span className="ml-2">Obriši</span>}
                       </Button>
                     </div>
                   </div>
