@@ -8,7 +8,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface TimePickerProps {
   time?: string
@@ -93,8 +92,8 @@ export function TimePicker({ time, onTimeChange, className }: TimePickerProps) {
           </Button>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
-        <ScrollArea className="h-[280px] w-[140px]">
+      <PopoverContent className="w-auto p-0" align="start">
+        <div className="max-h-72 w-40 overflow-y-auto">
           <div className="p-2">
             {timeOptions.map((timeOption) => (
               <button
@@ -110,7 +109,7 @@ export function TimePicker({ time, onTimeChange, className }: TimePickerProps) {
               </button>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   )
