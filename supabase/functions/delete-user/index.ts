@@ -128,26 +128,8 @@ serve(async (req) => {
 
     console.log('👤 Deleting user and related data for:', user_id)
 
-    // First delete specialist reports where this doctor is referenced
-    console.log('🗑️ Deleting specialist reports for doctor:', user_id)
-    const { error: reportsError } = await supabaseClient
-      .from('specialist_reports')
-      .delete()
-      .eq('doctor_id', user_id)
-
-    if (reportsError) {
-      console.error('❌ Specialist reports delete error:', reportsError)
-      return new Response(
-        JSON.stringify({ error: reportsError.message }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Then delete the profile record to avoid foreign key constraint violation
-    console.log('🗑️ Deleting profile...')
+    // Delete the profile - CASCADE will automatically delete specialist_reports
+    console.log('🗑️ Deleting profile (CASCADE will handle specialist_reports)...')
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .delete()
@@ -164,7 +146,7 @@ serve(async (req) => {
       )
     }
 
-    console.log('✅ Profile deleted, cleaning related records...')
+    console.log('✅ Profile deleted (specialist_reports auto-deleted via CASCADE)')
 
     // Delete user roles
     const { error: rolesError } = await supabaseClient
