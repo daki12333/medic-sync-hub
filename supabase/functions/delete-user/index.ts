@@ -47,12 +47,28 @@ serve(async (req) => {
     }
 
     // Extract user ID from JWT token (already verified by verify_jwt=true)
-    const token = authHeader.replace('Bearer ', '')
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    const userId = payload.sub
+    const token = authHeader.replace('Bearer ', '').trim()
+    const base64Url = token.split('.')[1]
+
+    if (!base64Url) {
+      console.error('❌ JWT token missing payload segment')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Convert from base64url to base64
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(base64Url.length / 4) * 4, '=')
+    const payloadJson = atob(base64)
+    const payload = JSON.parse(payloadJson)
+    const userId = payload.sub as string | undefined
     
     if (!userId) {
-      console.error('❌ Could not extract user ID from token')
+      console.error('❌ Could not extract user ID from token payload', payload)
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Invalid token' }),
         { 
@@ -66,7 +82,7 @@ serve(async (req) => {
     const supabaseClient = createClient(supabaseUrl, serviceRoleKey)
 
     // Check if user is admin
-    console.log('🔐 Checking admin role...')
+    console.log('🔐 Checking admin role for user:', userId)
     const { data: isAdmin, error: roleError } = await supabaseClient.rpc('has_role', {
       _user_id: userId,
       _role: 'admin'
