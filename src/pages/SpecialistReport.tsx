@@ -90,10 +90,12 @@ const SpecialistReport = () => {
   const [diagnosisSuggestions, setDiagnosisSuggestions] = useState<DiagnosisSuggestion[]>([]);
   const [showDiagnosisSuggestions, setShowDiagnosisSuggestions] = useState(false);
   const [isLoadingDiagnosis, setIsLoadingDiagnosis] = useState(false);
+  const [diagnosisAccepted, setDiagnosisAccepted] = useState(false);
   
   const [therapySuggestion, setTherapySuggestion] = useState<TherapySuggestion | null>(null);
   const [showTherapySuggestion, setShowTherapySuggestion] = useState(false);
   const [isLoadingTherapy, setIsLoadingTherapy] = useState(false);
+  const [therapyAccepted, setTherapyAccepted] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -223,7 +225,7 @@ const SpecialistReport = () => {
         setDiagnosisSuggestions(data.suggestions);
         setShowDiagnosisSuggestions(true);
         toast({
-          title: "AI Predlozi spremni",
+          title: "Predlozi spremni",
           description: `Pronađeno ${data.suggestions.length} mogućih dijagnoza.`,
         });
       }
@@ -245,6 +247,7 @@ const SpecialistReport = () => {
       diagnosis: `${suggestion.diagnosis} (${suggestion.icd_code})\n\n${suggestion.explanation}`
     }));
     setShowDiagnosisSuggestions(false);
+    setDiagnosisAccepted(true);
     toast({
       title: "Dijagnoza prihvaćena",
       description: "Dijagnoza je dodata u izveštaj.",
@@ -277,7 +280,7 @@ const SpecialistReport = () => {
         setTherapySuggestion(data);
         setShowTherapySuggestion(true);
         toast({
-          title: "AI Predlog spreman",
+          title: "Predlog spreman",
           description: "Terapija je predložena.",
         });
       }
@@ -301,6 +304,7 @@ const SpecialistReport = () => {
       therapy: therapySuggestion.therapy
     }));
     setShowTherapySuggestion(false);
+    setTherapyAccepted(true);
     toast({
       title: "Terapija prihvaćena",
       description: "Terapija je dodata u izveštaj.",
@@ -772,11 +776,11 @@ const SpecialistReport = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleGetDiagnosisSuggestions}
-                disabled={isLoadingDiagnosis || (!reportData.anamnesis && !reportData.objective_findings)}
+                disabled={isLoadingDiagnosis || diagnosisAccepted || (!reportData.anamnesis && !reportData.objective_findings)}
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
-                {isLoadingDiagnosis ? 'AI razmišlja...' : 'AI Predlog'}
+                {isLoadingDiagnosis ? 'Razmišljam...' : diagnosisAccepted ? 'Prihvaćeno' : 'Predlog'}
               </Button>
             </div>
             
@@ -786,7 +790,7 @@ const SpecialistReport = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    AI Predlozi
+                    Predlozi
                   </h4>
                   <Button
                     type="button"
@@ -850,11 +854,11 @@ const SpecialistReport = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleGetTherapySuggestion}
-                disabled={isLoadingTherapy || !reportData.diagnosis}
+                disabled={isLoadingTherapy || therapyAccepted || !reportData.diagnosis}
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
-                {isLoadingTherapy ? 'AI razmišlja...' : 'AI Predlog'}
+                {isLoadingTherapy ? 'Razmišljam...' : therapyAccepted ? 'Prihvaćeno' : 'Predlog'}
               </Button>
             </div>
             
@@ -864,7 +868,7 @@ const SpecialistReport = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-sm flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-primary" />
-                    AI Predlog
+                    Predlog
                   </h4>
                   <Button
                     type="button"
