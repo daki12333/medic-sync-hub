@@ -23,6 +23,7 @@ import {
   Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface Patient {
   id: string;
@@ -590,11 +591,13 @@ const Patients = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date_of_birth">Datum rođenja</Label>
-                    <Input
-                      id="date_of_birth"
-                      type="date"
-                      value={patientForm.date_of_birth}
-                      onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                    <DatePicker
+                      date={patientForm.date_of_birth ? new Date(patientForm.date_of_birth) : undefined}
+                      onDateChange={(date) => setPatientForm(prev => ({ 
+                        ...prev, 
+                        date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
+                      }))}
+                      placeholder="Izaberite datum rođenja"
                     />
                   </div>
                   <div className="space-y-2">
@@ -773,11 +776,13 @@ const Patients = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_date_of_birth">Datum rođenja</Label>
-                  <Input
-                    id="edit_date_of_birth"
-                    type="date"
-                    value={patientForm.date_of_birth}
-                    onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                  <DatePicker
+                    date={patientForm.date_of_birth ? new Date(patientForm.date_of_birth) : undefined}
+                    onDateChange={(date) => setPatientForm(prev => ({ 
+                      ...prev, 
+                      date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
+                    }))}
+                    placeholder="Izaberite datum rođenja"
                   />
                 </div>
                 <div className="space-y-2">
