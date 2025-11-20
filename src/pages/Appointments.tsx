@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientSearchDropdown } from '@/components/PatientSearchDropdown';
 import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 import {
   Calendar,
   Plus,
@@ -484,11 +486,12 @@ const Appointments = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="appointment_date">Datum</Label>
-                    <Input
-                      id="appointment_date"
-                      type="date"
-                      value={appointmentForm.appointment_date}
-                      onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_date: e.target.value }))}
+                    <DatePicker
+                      date={appointmentForm.appointment_date ? new Date(appointmentForm.appointment_date) : undefined}
+                      onDateChange={(date) => setAppointmentForm(prev => ({ 
+                        ...prev, 
+                        appointment_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
+                      }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -549,12 +552,10 @@ const Appointments = () => {
             
             <div className="flex items-center space-x-4">
               <Label htmlFor="date_picker">Datum:</Label>
-              <Input
-                id="date_picker"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-auto"
+              <DatePicker
+                date={selectedDate ? new Date(selectedDate) : new Date()}
+                onDateChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0])}
+                className="w-[240px]"
               />
             </div>
           </div>
@@ -687,11 +688,12 @@ const Appointments = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="appointment_date">Datum</Label>
-                  <Input
-                    id="appointment_date"
-                    type="date"
-                    value={appointmentForm.appointment_date}
-                    onChange={(e) => setAppointmentForm(prev => ({ ...prev, appointment_date: e.target.value }))}
+                  <DatePicker
+                    date={appointmentForm.appointment_date ? new Date(appointmentForm.appointment_date) : undefined}
+                    onDateChange={(date) => setAppointmentForm(prev => ({ 
+                      ...prev, 
+                      appointment_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
+                    }))}
                   />
                 </div>
                 <div className="space-y-2">

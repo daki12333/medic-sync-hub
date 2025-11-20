@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Printer, Plus, Sparkles, Check, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
+import { DatePicker } from '@/components/ui/date-picker';
+import { format } from 'date-fns';
 
 interface Patient {
   id: string;
@@ -718,11 +720,12 @@ const SpecialistReport = () => {
           {/* Exam Date */}
           <div className="space-y-2">
             <Label htmlFor="exam_date">Datum pregleda</Label>
-            <Input
-              id="exam_date"
-              type="date"
-              value={reportData.exam_date}
-              onChange={(e) => setReportData(prev => ({ ...prev, exam_date: e.target.value }))}
+            <DatePicker
+              date={reportData.exam_date ? new Date(reportData.exam_date) : new Date()}
+              onDateChange={(date) => setReportData(prev => ({ 
+                ...prev, 
+                exam_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
+              }))}
             />
           </div>
 
