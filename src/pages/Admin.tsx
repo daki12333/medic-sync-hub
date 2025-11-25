@@ -23,7 +23,8 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  KeyRound
 } from 'lucide-react';
 
 interface Profile {
@@ -230,6 +231,27 @@ const Admin = () => {
     }
   };
 
+  const sendPasswordReset = async (userEmail: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Uspešno",
+        description: `Email za reset lozinke je poslat na ${userEmail}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Greška",
+        description: error.message || "Nije moguće poslati email za reset lozinke",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -425,6 +447,15 @@ const Admin = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
+                         <Button
+                           variant="outline"
+                           size="sm"
+                           onClick={() => sendPasswordReset(profile.email)}
+                           className="transition-all duration-200"
+                         >
+                           <KeyRound className="h-4 w-4 mr-1" />
+                           Reset
+                         </Button>
                          <Button
                            variant="destructive"
                            size="sm"

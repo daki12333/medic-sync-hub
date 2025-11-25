@@ -49,6 +49,7 @@ const Sidebar = () => {
     { icon: Calendar, label: 'Termini', path: '/appointments' },
     { icon: FileText, label: 'Novi Izveštaj', path: '/specialist-report' },
     { icon: Activity, label: 'Istorija Izveštaja', path: '/report-history' },
+    { icon: Settings, label: 'Podešavanja', path: '/settings' },
     ...(profile?.role === 'admin' ? [{ icon: Settings, label: 'Administracija', path: '/admin' }] : [])
   ];
 
