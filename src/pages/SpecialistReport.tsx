@@ -760,7 +760,67 @@ const SpecialistReport = () => {
 
           {/* Objective Findings */}
           <div className="space-y-2">
-            <Label htmlFor="objective_findings">Objektivni nalaz</Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="objective_findings">Objektivni nalaz</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReportData(prev => ({ 
+                    ...prev, 
+                    objective_findings: `Dojke su intermedijarnog tipa.
+Fibroglandularni parenhim obe dojke lako inhomogene gradje, delom fibromikrocisticno izmenjena
+bez jasnog diferenciranja makrocističnih i solidnih tumorskih promena
+Retroareolarno se ne uočavaju znaci duktektazije.
+Kutis i subkutis su urednog nalaza.
+U aksilama pojedinačni, ovalni LN hiperehogenog hilusa do 10 mm
+DD BIRADS
+LD BIRADS
+Predlog:
+Kontrolni ultrazvuk za 12 meseci, po potrebi i ranije u zavisnosti od kliničkog nalaza
+Redovni klinički pregled dojki` 
+                  }))}
+                  className="text-xs"
+                >
+                  EHO DOJKE
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReportData(prev => ({ 
+                    ...prev, 
+                    objective_findings: `Štitasta zlezda u anatomskoj poziciji jasnih kontura, AP dijametar istmusa mm
+
+Dimenzije desnog lobusa  mm, a levog  mm. Parenhim žlezde homogen, bez izdvajanja promena po tipu nodusa, uredne CDS signalizacije. Obostrano submandibularne i parotidne pljuvačne žlezde homogene, neuvećane. Obostrano u vratu nema signifikantne limfadenopatije.` 
+                  }))}
+                  className="text-xs"
+                >
+                  EHO ŠTITNE ŽLEZDE
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReportData(prev => ({ 
+                    ...prev, 
+                    objective_findings: `JETRA homogena jasno ograničena, bez fokalnih patoloških promena i bez dilatacije intrahepatičkih zučnih puteva.
+ŽUČNA KESA bez uočenog patološkog sadržaja, urednog zida, bez periholečistične reakcije.
+PANKREAS homogen, jasno ograničen, bez izdvajanja patoloških promena.
+SLEZINA homogena , jasno ograničena, neuvećana.
+BUBREZI bez znakova staze, jasne kortikomedularne granice.
+MOKRAĆNA BEŠIKA jasno konturisana.
+ABDOMINALN AORTA urednog dijametra, bez aneurizmatskih proširenja i znakova disekcije.
+Duž magistralnih krvnih sudova abdomena i karlice ne vide se uvecani LN.
+Nema slobodne tecnosti u abdomenu` 
+                  }))}
+                  className="text-xs"
+                >
+                  EHO ABDOMENA
+                </Button>
+              </div>
+            </div>
             <Textarea
               id="objective_findings"
               value={reportData.objective_findings}
