@@ -443,10 +443,6 @@ const Patients = () => {
                 ${selectedPatient.date_of_birth ? `<div class="birth-year">Godina rođenja: ${new Date(selectedPatient.date_of_birth).getFullYear()}</div>` : ''}
               </div>
             </div>
-            ${selectedPatient.phone ? `<div class="field">
-              <span class="field-label">Telefon:</span>
-              <span class="field-value">${selectedPatient.phone}</span>
-            </div>` : ''}
             <div class="field">
               <span class="field-label">Datum pregleda:</span>
               <span class="field-value">${format(new Date(report.exam_date), 'dd.MM.yyyy')}</span>
