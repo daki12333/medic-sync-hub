@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Printer, Plus, Sparkles, Check, X } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { DoctorSearchDropdown } from '@/components/DoctorSearchDropdown';
-import { DatePicker } from '@/components/ui/date-picker';
-import { format } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Printer, Plus, Sparkles, Check, X } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { DoctorSearchDropdown } from "@/components/DoctorSearchDropdown";
+import { DatePicker } from "@/components/ui/date-picker";
+import { format } from "date-fns";
 
 interface Patient {
   id: string;
@@ -62,38 +62,37 @@ interface TherapySuggestion {
 const SpecialistReport = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
-  
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filteredPatients, setFilteredPatients] = useState<Patient[]>([]);
   const [showPatientSuggestions, setShowPatientSuggestions] = useState(false);
   const [showAddNewPatient, setShowAddNewPatient] = useState(false);
-  
-  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
-  const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  
+
+  const [selectedPatientId, setSelectedPatientId] = useState<string>("");
+  const [selectedDoctorId, setSelectedDoctorId] = useState<string>("");
+
   const [reportData, setReportData] = useState<ReportData>({
-    patient_name: '',
-    patient_dob: '',
-    patient_phone: '',
-    exam_date: new Date().toISOString().split('T')[0],
-    anamnesis: '',
-    objective_findings: '',
-    diagnosis: '',
-    therapy: '',
-    control: '',
-    echo_findings: '',
-    lab_results: '',
-    doctor_name: '',
-    doctor_specialization: ''
+    patient_name: "",
+    patient_dob: "",
+    patient_phone: "",
+    exam_date: new Date().toISOString().split("T")[0],
+    anamnesis: "",
+    objective_findings: "",
+    diagnosis: "",
+    therapy: "",
+    control: "",
+    echo_findings: "",
+    lab_results: "",
+    doctor_name: "",
+    doctor_specialization: "",
   });
-  
-  
+
   const [diagnosisSuggestions, setDiagnosisSuggestions] = useState<DiagnosisSuggestion[]>([]);
   const [showDiagnosisSuggestions, setShowDiagnosisSuggestions] = useState(false);
   const [isLoadingDiagnosis, setIsLoadingDiagnosis] = useState(false);
   const [diagnosisAccepted, setDiagnosisAccepted] = useState(false);
-  
+
   const [therapySuggestion, setTherapySuggestion] = useState<TherapySuggestion | null>(null);
   const [showTherapySuggestion, setShowTherapySuggestion] = useState(false);
   const [isLoadingTherapy, setIsLoadingTherapy] = useState(false);
@@ -102,18 +101,18 @@ const SpecialistReport = () => {
   useEffect(() => {
     if (loading) return;
     if (!user) {
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
     fetchData();
-    
+
     // Auto-select doctor if current user is a doctor
-    if (profile?.role === 'doctor' && user?.id) {
+    if (profile?.role === "doctor" && user?.id) {
       setSelectedDoctorId(user.id);
-      setReportData(prev => ({
+      setReportData((prev) => ({
         ...prev,
-        doctor_name: profile.full_name || '',
-        doctor_specialization: profile.specialization || ''
+        doctor_name: profile.full_name || "",
+        doctor_specialization: profile.specialization || "",
       }));
     }
   }, [user, profile, loading, navigate]);
@@ -122,33 +121,32 @@ const SpecialistReport = () => {
     try {
       // Fetch patients
       const { data: patientsData, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, first_name, last_name, date_of_birth, phone')
-        .eq('is_active', true)
-        .order('first_name');
+        .from("patients")
+        .select("id, first_name, last_name, date_of_birth, phone")
+        .eq("is_active", true)
+        .order("first_name");
 
       if (patientsError) throw patientsError;
       setPatients(patientsData || []);
 
       // Fetch doctors (profiles with doctor role)
       const { data: doctorsData, error: doctorsError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, specialization')
-        .eq('role', 'doctor')
-        .eq('is_active', true);
+        .from("profiles")
+        .select("user_id, full_name, specialization")
+        .eq("role", "doctor")
+        .eq("is_active", true);
 
       if (doctorsError) throw doctorsError;
-      
+
       // Map user_id to id for compatibility
-      const mappedDoctors = (doctorsData || []).map(d => ({
+      const mappedDoctors = (doctorsData || []).map((d) => ({
         id: d.user_id,
         full_name: d.full_name,
-        specialization: d.specialization
+        specialization: d.specialization,
       }));
       setDoctors(mappedDoctors);
-
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       toast({
         title: "Greška",
         description: "Nije moguće učitati podatke.",
@@ -158,11 +156,11 @@ const SpecialistReport = () => {
   };
 
   const handlePatientNameChange = (value: string) => {
-    setReportData(prev => ({ ...prev, patient_name: value }));
-    
+    setReportData((prev) => ({ ...prev, patient_name: value }));
+
     if (value.length > 0) {
-      const filtered = patients.filter(patient => 
-        `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(value.toLowerCase())
+      const filtered = patients.filter((patient) =>
+        `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(value.toLowerCase()),
       );
       setFilteredPatients(filtered);
       setShowPatientSuggestions(true);
@@ -175,11 +173,11 @@ const SpecialistReport = () => {
 
   const selectPatient = (patient: Patient) => {
     setSelectedPatientId(patient.id);
-    setReportData(prev => ({
+    setReportData((prev) => ({
       ...prev,
       patient_name: `${patient.first_name} ${patient.last_name}`,
-      patient_dob: patient.date_of_birth || '',
-      patient_phone: patient.phone || ''
+      patient_dob: patient.date_of_birth || "",
+      patient_phone: patient.phone || "",
     }));
     setShowPatientSuggestions(false);
     setShowAddNewPatient(false);
@@ -187,18 +185,18 @@ const SpecialistReport = () => {
 
   const handleDoctorChange = (doctorId: string) => {
     setSelectedDoctorId(doctorId);
-    const doctor = doctors.find(d => d.id === doctorId);
+    const doctor = doctors.find((d) => d.id === doctorId);
     if (doctor) {
-      setReportData(prev => ({
+      setReportData((prev) => ({
         ...prev,
-        doctor_name: doctor.full_name || '',
-        doctor_specialization: doctor.specialization || ''
+        doctor_name: doctor.full_name || "",
+        doctor_specialization: doctor.specialization || "",
       }));
     }
   };
 
   const handleAddNewPatient = () => {
-    navigate('/patients', { state: { addNew: true, patientName: reportData.patient_name } });
+    navigate("/patients", { state: { addNew: true, patientName: reportData.patient_name } });
   };
 
   const handleGetDiagnosisSuggestions = async () => {
@@ -213,16 +211,16 @@ const SpecialistReport = () => {
 
     setIsLoadingDiagnosis(true);
     try {
-      const { data, error } = await supabase.functions.invoke('medical-ai-assistant', {
+      const { data, error } = await supabase.functions.invoke("medical-ai-assistant", {
         body: {
-          type: 'diagnosis',
+          type: "diagnosis",
           anamnesis: reportData.anamnesis,
-          objectiveFindings: reportData.objective_findings
-        }
+          objectiveFindings: reportData.objective_findings,
+        },
       });
 
       if (error) throw error;
-      
+
       if (data?.suggestions) {
         setDiagnosisSuggestions(data.suggestions);
         setShowDiagnosisSuggestions(true);
@@ -232,7 +230,7 @@ const SpecialistReport = () => {
         });
       }
     } catch (error) {
-      console.error('Diagnosis suggestion error:', error);
+      console.error("Diagnosis suggestion error:", error);
       toast({
         title: "Greška",
         description: "Nije moguće dobiti predloge dijagnoza.",
@@ -244,9 +242,9 @@ const SpecialistReport = () => {
   };
 
   const handleAcceptDiagnosis = (suggestion: DiagnosisSuggestion) => {
-    setReportData(prev => ({
+    setReportData((prev) => ({
       ...prev,
-      diagnosis: `${suggestion.diagnosis} (${suggestion.icd_code})\n\n${suggestion.explanation}`
+      diagnosis: `${suggestion.diagnosis} (${suggestion.icd_code})\n\n${suggestion.explanation}`,
     }));
     setShowDiagnosisSuggestions(false);
     setDiagnosisAccepted(true);
@@ -268,16 +266,16 @@ const SpecialistReport = () => {
 
     setIsLoadingTherapy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('medical-ai-assistant', {
+      const { data, error } = await supabase.functions.invoke("medical-ai-assistant", {
         body: {
-          type: 'therapy',
+          type: "therapy",
           diagnosis: reportData.diagnosis,
-          anamnesis: reportData.anamnesis
-        }
+          anamnesis: reportData.anamnesis,
+        },
       });
 
       if (error) throw error;
-      
+
       if (data) {
         setTherapySuggestion(data);
         setShowTherapySuggestion(true);
@@ -287,7 +285,7 @@ const SpecialistReport = () => {
         });
       }
     } catch (error) {
-      console.error('Therapy suggestion error:', error);
+      console.error("Therapy suggestion error:", error);
       toast({
         title: "Greška",
         description: "Nije moguće dobiti predlog terapije.",
@@ -300,10 +298,10 @@ const SpecialistReport = () => {
 
   const handleAcceptTherapy = () => {
     if (!therapySuggestion) return;
-    
-    setReportData(prev => ({
+
+    setReportData((prev) => ({
       ...prev,
-      therapy: therapySuggestion.therapy
+      therapy: therapySuggestion.therapy,
     }));
     setShowTherapySuggestion(false);
     setTherapyAccepted(true);
@@ -334,21 +332,19 @@ const SpecialistReport = () => {
 
     try {
       // Save to database
-      const { error } = await supabase
-        .from('specialist_reports')
-        .insert({
-          patient_id: selectedPatientId,
-          doctor_id: selectedDoctorId,
-          exam_date: reportData.exam_date,
-          anamnesis: reportData.anamnesis,
-          objective_findings: reportData.objective_findings,
-          diagnosis: reportData.diagnosis,
-          therapy: reportData.therapy,
-          control: reportData.control,
-          echo_findings: reportData.echo_findings,
-          lab_results: reportData.lab_results,
-          created_by: user?.id
-        });
+      const { error } = await supabase.from("specialist_reports").insert({
+        patient_id: selectedPatientId,
+        doctor_id: selectedDoctorId,
+        exam_date: reportData.exam_date,
+        anamnesis: reportData.anamnesis,
+        objective_findings: reportData.objective_findings,
+        diagnosis: reportData.diagnosis,
+        therapy: reportData.therapy,
+        control: reportData.control,
+        echo_findings: reportData.echo_findings,
+        lab_results: reportData.lab_results,
+        created_by: user?.id,
+      });
 
       if (error) throw error;
 
@@ -360,7 +356,7 @@ const SpecialistReport = () => {
       // Continue with printing
       handlePrint();
     } catch (error) {
-      console.error('Error saving report:', error);
+      console.error("Error saving report:", error);
       toast({
         title: "Greška",
         description: "Nije moguće sačuvati izveštaj.",
@@ -371,7 +367,7 @@ const SpecialistReport = () => {
 
   const handlePrint = () => {
     // Open print window
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) return;
 
     const printContent = `
@@ -605,46 +601,54 @@ const SpecialistReport = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <span class="field-value">${reportData.patient_name}</span>
             </div>
-            ${reportData.patient_dob ? `<div class="field">
+            ${
+              reportData.patient_dob
+                ? `<div class="field">
               <span class="field-label">Datum rođenja:</span>
-              <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</span>
-            </div>` : ''}
+              <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString("sr-RS")}</span>
+            </div>`
+                : ""
+            }
             <div class="field">
               <span class="field-label">Datum pregleda:</span>
-              <span class="field-value">${new Date(reportData.exam_date).toLocaleDateString('sr-RS')}</span>
+              <span class="field-value">${new Date(reportData.exam_date).toLocaleDateString("sr-RS")}</span>
             </div>
           </div>
           
           <div class="section">
             <div class="section-title">Anamneza</div>
-            <div class="text-content">${reportData.anamnesis || ''}</div>
+            <div class="text-content">${reportData.anamnesis || ""}</div>
           </div>
           
           <div class="section">
             <div class="section-title">Objektivni nalaz</div>
-            <div class="text-content">${reportData.objective_findings || ''}</div>
+            <div class="text-content">${reportData.objective_findings || ""}</div>
           </div>
           
           <div class="section">
             <div class="section-title">Dijagnoza</div>
-            <div class="text-content">${reportData.diagnosis || ''}</div>
+            <div class="text-content">${reportData.diagnosis || ""}</div>
           </div>
           
           <div class="section">
             <div class="section-title">Terapija</div>
-            <div class="text-content">${reportData.therapy || ''}</div>
+            <div class="text-content">${reportData.therapy || ""}</div>
           </div>
           
-          ${reportData.lab_results ? `<div class="lab-results">
+          ${
+            reportData.lab_results
+              ? `<div class="lab-results">
             <div class="section-title" style="color: #c05621; margin-bottom: 10px;">Laboratorijski nalazi</div>
             <div class="text-content" style="color: #744210;">${reportData.lab_results}</div>
-          </div>` : ''}
+          </div>`
+              : ""
+          }
           
           <div class="footer">
             <div class="signature-line"></div>
             <div class="doctor-signature">
               ${reportData.doctor_name}
-              ${reportData.doctor_specialization ? `<br><span style="font-size: 17px; font-weight: 500; color: #4a5568;">${reportData.doctor_specialization}</span>` : ''}
+              ${reportData.doctor_specialization ? `<br><span style="font-size: 17px; font-weight: 500; color: #4a5568;">${reportData.doctor_specialization}</span>` : ""}
             </div>
           </div>
         </div>
@@ -654,7 +658,7 @@ const SpecialistReport = () => {
 
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
+
     // Wait for content to load then print
     printWindow.onload = () => {
       setTimeout(() => {
@@ -669,11 +673,7 @@ const SpecialistReport = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="p-2"
-          >
+          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="p-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-3xl font-bold">Specijalistički Izveštaj</h1>
@@ -694,7 +694,7 @@ const SpecialistReport = () => {
               onChange={(e) => handlePatientNameChange(e.target.value)}
               placeholder="Unesite ime i prezime pacijenta"
             />
-            
+
             {showPatientSuggestions && filteredPatients.length > 0 && (
               <div className="absolute z-10 w-full bg-background border border-border rounded-md shadow-lg mt-1">
                 {filteredPatients.map((patient) => (
@@ -706,14 +706,14 @@ const SpecialistReport = () => {
                     {patient.first_name} {patient.last_name}
                     {patient.date_of_birth && (
                       <span className="text-sm text-muted-foreground ml-2">
-                        ({new Date(patient.date_of_birth).toLocaleDateString('sr-RS')})
+                        ({new Date(patient.date_of_birth).toLocaleDateString("sr-RS")})
                       </span>
                     )}
                   </div>
                 ))}
               </div>
             )}
-            
+
             {showAddNewPatient && reportData.patient_name.length > 0 && (
               <div className="absolute z-10 w-full bg-background border border-border rounded-md shadow-lg mt-1">
                 <div
@@ -732,10 +732,12 @@ const SpecialistReport = () => {
             <Label htmlFor="exam_date">Datum pregleda</Label>
             <DatePicker
               date={reportData.exam_date ? new Date(reportData.exam_date) : new Date()}
-              onDateChange={(date) => setReportData(prev => ({ 
-                ...prev, 
-                exam_date: date ? format(date, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0]
-              }))}
+              onDateChange={(date) =>
+                setReportData((prev) => ({
+                  ...prev,
+                  exam_date: date ? format(date, "yyyy-MM-dd") : new Date().toISOString().split("T")[0],
+                }))
+              }
             />
           </div>
 
@@ -743,17 +745,17 @@ const SpecialistReport = () => {
             value={selectedDoctorId}
             onValueChange={(doctorId) => {
               setSelectedDoctorId(doctorId);
-              const doctor = doctors.find(d => d.id === doctorId);
+              const doctor = doctors.find((d) => d.id === doctorId);
               if (doctor) {
-                setReportData(prev => ({
+                setReportData((prev) => ({
                   ...prev,
-                  doctor_name: doctor.full_name || '',
-                  doctor_specialization: doctor.specialization || ''
+                  doctor_name: doctor.full_name || "",
+                  doctor_specialization: doctor.specialization || "",
                 }));
               }
             }}
             label="Lekar"
-            placeholder={profile?.role === 'doctor' ? reportData.doctor_name : "Pretraži lekare..."}
+            placeholder={profile?.role === "doctor" ? reportData.doctor_name : "Pretraži lekare..."}
           />
 
           {/* Anamnesis */}
@@ -762,7 +764,7 @@ const SpecialistReport = () => {
             <Textarea
               id="anamnesis"
               value={reportData.anamnesis}
-              onChange={(e) => setReportData(prev => ({ ...prev, anamnesis: e.target.value }))}
+              onChange={(e) => setReportData((prev) => ({ ...prev, anamnesis: e.target.value }))}
               placeholder="Anamneza i nalaz"
               rows={4}
             />
@@ -777,10 +779,12 @@ const SpecialistReport = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setReportData(prev => ({ 
-                    ...prev, 
-                    objective_findings: `Pacijent u dobrom opštem stanju, orijentisan. Vitalni znaci uredni. Srce ritmično, pluća čista, abdomen mekan bez bolnosti, ekstremiteti bez edema, neurološki nalaz uredan, koža i sluznice uredne.` 
-                  }))}
+                  onClick={() =>
+                    setReportData((prev) => ({
+                      ...prev,
+                      objective_findings: `Pacijent u dobrom opštem stanju, orijentisan. Vitalni znaci uredni. Srce ritmično, pluća čista, abdomen mekan bez bolnosti, ekstremiteti bez edema, neurološki nalaz uredan, koža i sluznice uredne.`,
+                    }))
+                  }
                   className="text-xs"
                 >
                   Klasican
@@ -789,9 +793,10 @@ const SpecialistReport = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setReportData(prev => ({ 
-                    ...prev, 
-                    objective_findings: `Dojke su intermedijarnog tipa.
+                  onClick={() =>
+                    setReportData((prev) => ({
+                      ...prev,
+                      objective_findings: `Dojke su intermedijarnog tipa.
 Fibroglandularni parenhim obe dojke lako inhomogene gradje, delom fibromikrocisticno izmenjena
 bez jasnog diferenciranja makrocističnih i solidnih tumorskih promena
 Retroareolarno se ne uočavaju znaci duktektazije.
@@ -801,8 +806,9 @@ DD BIRADS
 LD BIRADS
 Predlog:
 Kontrolni ultrazvuk za 12 meseci, po potrebi i ranije u zavisnosti od kliničkog nalaza
-Redovni klinički pregled dojki` 
-                  }))}
+Redovni klinički pregled dojki`,
+                    }))
+                  }
                   className="text-xs"
                 >
                   EHO DOJKE
@@ -811,12 +817,14 @@ Redovni klinički pregled dojki`
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setReportData(prev => ({ 
-                    ...prev, 
-                    objective_findings: `Štitasta zlezda u anatomskoj poziciji jasnih kontura, AP dijametar istmusa mm
+                  onClick={() =>
+                    setReportData((prev) => ({
+                      ...prev,
+                      objective_findings: `Štitasta zlezda u anatomskoj poziciji jasnih kontura, AP dijametar istmusa mm
 
-Dimenzije desnog lobusa  mm, a levog  mm. Parenhim žlezde homogen, bez izdvajanja promena po tipu nodusa, uredne CDS signalizacije. Obostrano submandibularne i parotidne pljuvačne žlezde homogene, neuvećane. Obostrano u vratu nema signifikantne limfadenopatije.` 
-                  }))}
+Dimenzije desnog lobusa  mm, a levog  mm. Parenhim žlezde homogen, bez izdvajanja promena po tipu nodusa, uredne CDS signalizacije. Obostrano submandibularne i parotidne pljuvačne žlezde homogene, neuvećane. Obostrano u vratu nema signifikantne limfadenopatije.`,
+                    }))
+                  }
                   className="text-xs"
                 >
                   EHO ŠTITNE ŽLEZDE
@@ -825,18 +833,20 @@ Dimenzije desnog lobusa  mm, a levog  mm. Parenhim žlezde homogen, bez izdvajan
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setReportData(prev => ({ 
-                    ...prev, 
-                    objective_findings: `JETRA homogena jasno ograničena, bez fokalnih patoloških promena i bez dilatacije intrahepatičkih zučnih puteva.
+                  onClick={() =>
+                    setReportData((prev) => ({
+                      ...prev,
+                      objective_findings: `JETRA homogena, jasno ograničena, bez fokalnih patoloških promena i bez dilatacije intrahepatičkih zučnih puteva.
 ŽUČNA KESA bez uočenog patološkog sadržaja, urednog zida, bez periholečistične reakcije.
 PANKREAS homogen, jasno ograničen, bez izdvajanja patoloških promena.
 SLEZINA homogena , jasno ograničena, neuvećana.
 BUBREZI bez znakova staze, jasne kortikomedularne granice.
 MOKRAĆNA BEŠIKA jasno konturisana.
-ABDOMINALN AORTA urednog dijametra, bez aneurizmatskih proširenja i znakova disekcije.
+ABDOMINALNA AORTA urednog dijametra, bez aneurizmatskih proširenja i znakova disekcije.
 Duž magistralnih krvnih sudova abdomena i karlice ne vide se uvecani LN.
-Nema slobodne tecnosti u abdomenu` 
-                  }))}
+Nema slobodne tecnosti u abdomenu`,
+                    }))
+                  }
                   className="text-xs"
                 >
                   EHO ABDOMENA
@@ -846,7 +856,7 @@ Nema slobodne tecnosti u abdomenu`
             <Textarea
               id="objective_findings"
               value={reportData.objective_findings}
-              onChange={(e) => setReportData(prev => ({ ...prev, objective_findings: e.target.value }))}
+              onChange={(e) => setReportData((prev) => ({ ...prev, objective_findings: e.target.value }))}
               placeholder="Objektivni nalaz"
               rows={3}
             />
@@ -861,14 +871,16 @@ Nema slobodne tecnosti u abdomenu`
                 variant="outline"
                 size="sm"
                 onClick={handleGetDiagnosisSuggestions}
-                disabled={isLoadingDiagnosis || diagnosisAccepted || (!reportData.anamnesis && !reportData.objective_findings)}
+                disabled={
+                  isLoadingDiagnosis || diagnosisAccepted || (!reportData.anamnesis && !reportData.objective_findings)
+                }
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
-                {isLoadingDiagnosis ? 'Razmišljam...' : diagnosisAccepted ? 'Prihvaćeno' : 'Predlog'}
+                {isLoadingDiagnosis ? "Razmišljam..." : diagnosisAccepted ? "Prihvaćeno" : "Predlog"}
               </Button>
             </div>
-            
+
             {/* Diagnosis Suggestions Dialog - ABOVE textarea */}
             {showDiagnosisSuggestions && diagnosisSuggestions.length > 0 && (
               <div className="p-4 border border-primary rounded-lg bg-accent/50 space-y-3 max-h-[400px] overflow-y-auto">
@@ -888,7 +900,10 @@ Nema slobodne tecnosti u abdomenu`
                   </Button>
                 </div>
                 {diagnosisSuggestions.map((suggestion, index) => (
-                  <div key={index} className="p-3 bg-background rounded border border-border hover:border-primary transition-colors">
+                  <div
+                    key={index}
+                    className="p-3 bg-background rounded border border-border hover:border-primary transition-colors"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -896,11 +911,15 @@ Nema slobodne tecnosti u abdomenu`
                           <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary font-mono">
                             {suggestion.icd_code}
                           </span>
-                          <span className={`text-xs px-2 py-0.5 rounded ${
-                            suggestion.probability === 'visoka' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                            suggestion.probability === 'srednja' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                            'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              suggestion.probability === "visoka"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                : suggestion.probability === "srednja"
+                                  ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
+                                  : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                            }`}
+                          >
                             {suggestion.probability}
                           </span>
                         </div>
@@ -920,11 +939,11 @@ Nema slobodne tecnosti u abdomenu`
                 ))}
               </div>
             )}
-            
+
             <Textarea
               id="diagnosis"
               value={reportData.diagnosis}
-              onChange={(e) => setReportData(prev => ({ ...prev, diagnosis: e.target.value }))}
+              onChange={(e) => setReportData((prev) => ({ ...prev, diagnosis: e.target.value }))}
               placeholder="Dijagnoza"
               rows={2}
             />
@@ -943,10 +962,10 @@ Nema slobodne tecnosti u abdomenu`
                 className="flex items-center gap-2"
               >
                 <Sparkles className="h-4 w-4" />
-                {isLoadingTherapy ? 'Razmišljam...' : therapyAccepted ? 'Prihvaćeno' : 'Predlog'}
+                {isLoadingTherapy ? "Razmišljam..." : therapyAccepted ? "Prihvaćeno" : "Predlog"}
               </Button>
             </div>
-            
+
             {/* Therapy Suggestion Dialog - ABOVE textarea */}
             {showTherapySuggestion && therapySuggestion && (
               <div className="p-3 border border-primary rounded-lg bg-accent/50">
@@ -977,11 +996,11 @@ Nema slobodne tecnosti u abdomenu`
                 </Button>
               </div>
             )}
-            
+
             <Textarea
               id="therapy"
               value={reportData.therapy}
-              onChange={(e) => setReportData(prev => ({ ...prev, therapy: e.target.value }))}
+              onChange={(e) => setReportData((prev) => ({ ...prev, therapy: e.target.value }))}
               placeholder="Terapija"
               rows={3}
             />
@@ -993,16 +1012,15 @@ Nema slobodne tecnosti u abdomenu`
             <Textarea
               id="lab_results"
               value={reportData.lab_results}
-              onChange={(e) => setReportData(prev => ({ ...prev, lab_results: e.target.value }))}
+              onChange={(e) => setReportData((prev) => ({ ...prev, lab_results: e.target.value }))}
               placeholder="SE CRP KS glyc,hol,trig urea,kreat K,Na Fe bil,lak fosf,gama GT,ALT,AST Urin"
               rows={2}
             />
           </div>
 
-
           {/* Save and Print Button */}
           <div className="flex justify-end pt-4">
-            <Button 
+            <Button
               onClick={handleSaveAndPrint}
               disabled={!reportData.patient_name || !reportData.doctor_name}
               className="flex items-center space-x-2"
