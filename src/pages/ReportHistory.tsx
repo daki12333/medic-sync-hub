@@ -235,7 +235,7 @@ const ReportHistory = () => {
           
           body {
             font-family: 'Times New Roman', serif;
-            font-size: 19px;
+            font-size: 18px;
             line-height: 1.3;
             color: #000;
             margin: 0;
@@ -256,7 +256,7 @@ const ReportHistory = () => {
           }
           
           .title {
-            font-size: 29px;
+            font-size: 27px;
             font-weight: 900;
             margin-bottom: 10px;
             color: #1a365d;
@@ -279,20 +279,20 @@ const ReportHistory = () => {
           
           .field-label {
             font-weight: 700;
-            font-size: 19px;
+            font-size: 18px;
             color: #1a365d;
             min-width: 160px;
             display: inline-block;
           }
           
           .field-value {
-            font-size: 19px;
+            font-size: 18px;
             color: #2d3748;
             font-weight: 500;
           }
           
           .birth-year {
-            font-size: 17px;
+            font-size: 16px;
             color: #4a5568;
             margin-top: 4px;
             font-weight: 500;
@@ -308,7 +308,7 @@ const ReportHistory = () => {
           
           .section-title {
             font-weight: 800;
-            font-size: 22px;
+            font-size: 20px;
             color: #1a365d;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -316,7 +316,7 @@ const ReportHistory = () => {
           }
           
           .text-content {
-            font-size: 18px;
+            font-size: 17px;
             line-height: 1.4;
             color: #2d3748;
             text-align: justify;
@@ -346,7 +346,7 @@ const ReportHistory = () => {
           
           .icd-title {
             font-weight: 800;
-            font-size: 17px;
+            font-size: 16px;
             color: #1a365d;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -364,13 +364,13 @@ const ReportHistory = () => {
           .icd-code {
             font-weight: 700;
             color: #2c5282;
-            font-size: 18px;
+            font-size: 17px;
             font-family: 'Courier New', monospace;
           }
           
           .icd-description {
             color: #2d3748;
-            font-size: 17px;
+            font-size: 16px;
             margin-left: 8px;
           }
           
@@ -391,7 +391,7 @@ const ReportHistory = () => {
           }
           
           .doctor-signature {
-            font-size: 19px;
+            font-size: 18px;
             font-weight: 700;
             color: #1a365d;
           }
@@ -462,7 +462,7 @@ const ReportHistory = () => {
             <div class="signature-line"></div>
             <div class="doctor-signature">
               ${report.doctor.full_name}
-              ${report.doctor.specialization ? `<br><span style="font-size: 17px; font-weight: 500; color: #4a5568;">${report.doctor.specialization}</span>` : ''}
+              ${report.doctor.specialization ? `<br><span style="font-size: 16px; font-weight: 500; color: #4a5568;">${report.doctor.specialization}</span>` : ''}
             </div>
           </div>
         </div>

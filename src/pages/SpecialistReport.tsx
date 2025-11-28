@@ -399,7 +399,7 @@ const SpecialistReport = () => {
           
           body {
             font-family: 'Times New Roman', serif;
-            font-size: 19px;
+            font-size: 18px;
             line-height: 1.3;
             color: #000;
             margin: 0;
@@ -420,7 +420,7 @@ const SpecialistReport = () => {
           }
           
           .title {
-            font-size: 29px;
+            font-size: 27px;
             font-weight: 900;
             margin-bottom: 10px;
             color: #1a365d;
@@ -430,7 +430,7 @@ const SpecialistReport = () => {
           }
           
           .subtitle {
-            font-size: 17px;
+            font-size: 16px;
             color: #4a5568;
             font-style: italic;
             margin-top: 5px;
@@ -450,20 +450,20 @@ const SpecialistReport = () => {
           
           .field-label {
             font-weight: 700;
-            font-size: 19px;
+            font-size: 18px;
             color: #1a365d;
             min-width: 160px;
             display: inline-block;
           }
           
           .field-value {
-            font-size: 19px;
+            font-size: 18px;
             color: #2d3748;
             font-weight: 500;
           }
           
           .birth-year {
-            font-size: 17px;
+            font-size: 16px;
             color: #4a5568;
             margin-top: 4px;
             font-weight: 500;
@@ -479,7 +479,7 @@ const SpecialistReport = () => {
           
           .section-title {
             font-weight: 800;
-            font-size: 22px;
+            font-size: 20px;
             color: #1a365d;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -487,7 +487,7 @@ const SpecialistReport = () => {
           }
           
           .text-content {
-            font-size: 18px;
+            font-size: 17px;
             line-height: 1.4;
             color: #2d3748;
             text-align: justify;
@@ -517,7 +517,7 @@ const SpecialistReport = () => {
           
           .icd-title {
             font-weight: 800;
-            font-size: 17px;
+            font-size: 16px;
             color: #1a365d;
             margin-bottom: 8px;
             text-transform: uppercase;
@@ -535,13 +535,13 @@ const SpecialistReport = () => {
           .icd-code {
             font-weight: 700;
             color: #2c5282;
-            font-size: 18px;
+            font-size: 17px;
             font-family: 'Courier New', monospace;
           }
           
           .icd-description {
             color: #2d3748;
-            font-size: 17px;
+            font-size: 16px;
             margin-left: 8px;
           }
           
