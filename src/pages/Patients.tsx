@@ -25,7 +25,6 @@ import {
   Printer
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { DatePicker } from '@/components/ui/date-picker';
 
 interface Patient {
   id: string;
@@ -293,7 +292,7 @@ const Patients = () => {
           
           body {
             font-family: 'Times New Roman', serif;
-            font-size: 16px;
+            font-size: 19px;
             line-height: 1.3;
             color: #000;
             margin: 0;
@@ -314,7 +313,7 @@ const Patients = () => {
           }
           
           .title {
-            font-size: 24px;
+            font-size: 29px;
             font-weight: 900;
             margin-bottom: 10px;
             color: #1a365d;
@@ -337,15 +336,22 @@ const Patients = () => {
           
           .field-label {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 19px;
             color: #1a365d;
             min-width: 160px;
             display: inline-block;
           }
           
           .field-value {
-            font-size: 16px;
+            font-size: 19px;
             color: #2d3748;
+            font-weight: 500;
+          }
+          
+          .birth-year {
+            font-size: 17px;
+            color: #4a5568;
+            margin-top: 4px;
             font-weight: 500;
           }
           
@@ -359,7 +365,7 @@ const Patients = () => {
           
           .section-title {
             font-weight: 800;
-            font-size: 18px;
+            font-size: 22px;
             color: #1a365d;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -367,7 +373,7 @@ const Patients = () => {
           }
           
           .text-content {
-            font-size: 15px;
+            font-size: 18px;
             line-height: 1.4;
             color: #2d3748;
             text-align: justify;
@@ -402,7 +408,7 @@ const Patients = () => {
           }
           
           .doctor-signature {
-            font-size: 16px;
+            font-size: 19px;
             font-weight: 700;
             color: #1a365d;
           }
@@ -432,7 +438,10 @@ const Patients = () => {
           <div class="patient-info">
             <div class="field">
               <span class="field-label">Ime i prezime pacijenta:</span>
-              <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
+              <div>
+                <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
+                ${selectedPatient.date_of_birth ? `<div class="birth-year">Godina rođenja: ${new Date(selectedPatient.date_of_birth).getFullYear()}</div>` : ''}
+              </div>
             </div>
             ${selectedPatient.phone ? `<div class="field">
               <span class="field-label">Telefon:</span>
@@ -482,8 +491,8 @@ const Patients = () => {
           <div class="footer">
             <div class="signature-line"></div>
             <div class="doctor-signature">
-              Lekar: ${report.doctor.full_name}
-              ${report.doctor.specialization ? `<br><span style="font-size: 14px; font-weight: 500; color: #4a5568;">${report.doctor.specialization}</span>` : ''}
+              ${report.doctor.full_name}
+              ${report.doctor.specialization ? `<br><span style="font-size: 17px; font-weight: 500; color: #4a5568;">${report.doctor.specialization}</span>` : ''}
             </div>
           </div>
         </div>
@@ -594,14 +603,12 @@ const Patients = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date_of_birth">Datum rođenja</Label>
-                    <DatePicker
-                      date={patientForm.date_of_birth ? new Date(patientForm.date_of_birth) : undefined}
-                      onDateChange={(date) => setPatientForm(prev => ({ 
-                        ...prev, 
-                        date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
-                      }))}
-                      placeholder="Izaberite datum rođenja"
-                      className="w-full"
+                    <Input
+                      id="date_of_birth"
+                      type="text"
+                      value={patientForm.date_of_birth}
+                      onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                      placeholder="DD.MM.GGGG (npr. 15.03.1985)"
                     />
                   </div>
                   <div className="space-y-2">
@@ -783,14 +790,12 @@ const Patients = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit_date_of_birth">Datum rođenja</Label>
-                  <DatePicker
-                    date={patientForm.date_of_birth ? new Date(patientForm.date_of_birth) : undefined}
-                    onDateChange={(date) => setPatientForm(prev => ({ 
-                      ...prev, 
-                      date_of_birth: date ? format(date, 'yyyy-MM-dd') : ''
-                    }))}
-                    placeholder="Izaberite datum rođenja"
-                    className="w-full"
+                  <Input
+                    id="edit_date_of_birth"
+                    type="text"
+                    value={patientForm.date_of_birth}
+                    onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                    placeholder="DD.MM.GGGG (npr. 15.03.1985)"
                   />
                 </div>
                 <div className="space-y-2">
