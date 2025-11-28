@@ -74,6 +74,53 @@ const Patients = () => {
     phone: ''
   });
 
+  // Format date from dd.mm.yyyy to yyyy-mm-dd for database
+  const formatDateForDB = (dateStr: string): string | null => {
+    if (!dateStr) return null;
+    const parts = dateStr.split('.');
+    if (parts.length !== 3) return null;
+    const [day, month, year] = parts;
+    if (day.length !== 2 || month.length !== 2 || year.length !== 4) return null;
+    return `${year}-${month}-${day}`;
+  };
+
+  // Format date from yyyy-mm-dd to dd.mm.yyyy for display
+  const formatDateForDisplay = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const [year, month, day] = parts;
+    return `${day}.${month}.${year}`;
+  };
+
+  // Handle date input with automatic dot insertion
+  const handleDateInputChange = (value: string) => {
+    // Remove all non-digit characters
+    let numbers = value.replace(/\D/g, '');
+    
+    // Limit to 8 digits (ddmmyyyy)
+    numbers = numbers.substring(0, 8);
+    
+    let formatted = '';
+    
+    if (numbers.length > 0) {
+      // Add first 2 digits (day)
+      formatted = numbers.substring(0, 2);
+      
+      if (numbers.length > 2) {
+        // Add dot and next 2 digits (month)
+        formatted += '.' + numbers.substring(2, 4);
+        
+        if (numbers.length > 4) {
+          // Add dot and remaining digits (year)
+          formatted += '.' + numbers.substring(4, 8);
+        }
+      }
+    }
+    
+    setPatientForm(prev => ({ ...prev, date_of_birth: formatted }));
+  };
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -112,11 +159,14 @@ const Patients = () => {
 
   const createPatient = async () => {
     try {
+      const dbDate = formatDateForDB(patientForm.date_of_birth);
+      
       const { error } = await supabase
         .from('patients')
         .insert({
-          ...patientForm,
-          date_of_birth: patientForm.date_of_birth || null,
+          first_name: patientForm.first_name,
+          last_name: patientForm.last_name,
+          date_of_birth: dbDate,
           phone: patientForm.phone || null,
         });
 
@@ -144,11 +194,14 @@ const Patients = () => {
     if (!selectedPatient) return;
 
     try {
+      const dbDate = formatDateForDB(patientForm.date_of_birth);
+      
       const { error } = await supabase
         .from('patients')
         .update({
-          ...patientForm,
-          date_of_birth: patientForm.date_of_birth || null,
+          first_name: patientForm.first_name,
+          last_name: patientForm.last_name,
+          date_of_birth: dbDate,
           phone: patientForm.phone || null,
         })
         .eq('id', selectedPatient.id);
@@ -226,7 +279,7 @@ const Patients = () => {
     setPatientForm({
       first_name: patient.first_name,
       last_name: patient.last_name,
-      date_of_birth: patient.date_of_birth || '',
+      date_of_birth: patient.date_of_birth ? formatDateForDisplay(patient.date_of_birth) : '',
       phone: patient.phone || ''
     });
     setIsEditPatientOpen(true);
@@ -593,8 +646,9 @@ const Patients = () => {
                       id="date_of_birth"
                       type="text"
                       value={patientForm.date_of_birth}
-                      onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
-                      placeholder="DD.MM.GGGG (npr. 15.03.1985)"
+                      onChange={(e) => handleDateInputChange(e.target.value)}
+                      placeholder="DD.MM.GGGG"
+                      maxLength={10}
                     />
                   </div>
                   <div className="space-y-2">
@@ -780,8 +834,9 @@ const Patients = () => {
                     id="edit_date_of_birth"
                     type="text"
                     value={patientForm.date_of_birth}
-                    onChange={(e) => setPatientForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
-                    placeholder="DD.MM.GGGG (npr. 15.03.1985)"
+                    onChange={(e) => handleDateInputChange(e.target.value)}
+                    placeholder="DD.MM.GGGG"
+                    maxLength={10}
                   />
                 </div>
                 <div className="space-y-2">
