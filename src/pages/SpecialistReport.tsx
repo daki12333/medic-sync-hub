@@ -779,6 +779,18 @@ const SpecialistReport = () => {
                   size="sm"
                   onClick={() => setReportData(prev => ({ 
                     ...prev, 
+                    objective_findings: `Pacijent u dobrom opštem stanju, orijentisan. Vitalni znaci uredni. Srce ritmično, pluća čista, abdomen mekan bez bolnosti, ekstremiteti bez edema, neurološki nalaz uredan, koža i sluznice uredne.` 
+                  }))}
+                  className="text-xs"
+                >
+                  Klasican
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReportData(prev => ({ 
+                    ...prev, 
                     objective_findings: `Dojke su intermedijarnog tipa.
 Fibroglandularni parenhim obe dojke lako inhomogene gradje, delom fibromikrocisticno izmenjena
 bez jasnog diferenciranja makrocističnih i solidnih tumorskih promena
