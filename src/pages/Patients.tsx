@@ -418,7 +418,7 @@ const Patients = () => {
           
           .section-title {
             font-weight: 800;
-            font-size: 20px;
+            font-size: 19px;
             color: #1a365d;
             margin-bottom: 6px;
             text-transform: uppercase;
@@ -426,7 +426,7 @@ const Patients = () => {
           }
           
           .text-content {
-            font-size: 17px;
+            font-size: 18px;
             line-height: 1.4;
             color: #2d3748;
             text-align: justify;
