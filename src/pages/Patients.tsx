@@ -491,11 +491,12 @@ const Patients = () => {
           <div class="patient-info">
             <div class="field">
               <span class="field-label">Ime i prezime pacijenta:</span>
-              <div>
-                <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
-                ${selectedPatient.date_of_birth ? `<div class="birth-year">Datum rođenja: ${new Date(selectedPatient.date_of_birth).toLocaleDateString('sr-RS')}</div>` : ''}
-              </div>
+              <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
             </div>
+            ${selectedPatient.date_of_birth ? `<div class="field">
+              <span class="field-label">Datum rođenja:</span>
+              <span class="field-value">${new Date(selectedPatient.date_of_birth).toLocaleDateString('sr-RS')}</span>
+            </div>` : ''}
             <div class="field">
               <span class="field-label">Datum pregleda:</span>
               <span class="field-value">${format(new Date(report.exam_date), 'dd.MM.yyyy')}</span>

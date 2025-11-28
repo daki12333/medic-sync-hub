@@ -603,12 +603,12 @@ const SpecialistReport = () => {
           <div class="patient-info">
             <div class="field">
               <span class="field-label">Ime i prezime pacijenta:</span>
-              <div>
-                <span class="field-value">${reportData.patient_name}</span>
-                ${reportData.patient_dob ? `<div class="birth-year">Datum rođenja: ${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</div>` : ''}
-              </div>
+              <span class="field-value">${reportData.patient_name}</span>
             </div>
-            
+            ${reportData.patient_dob ? `<div class="field">
+              <span class="field-label">Datum rođenja:</span>
+              <span class="field-value">${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</span>
+            </div>` : ''}
             <div class="field">
               <span class="field-label">Datum pregleda:</span>
               <span class="field-value">${new Date(reportData.exam_date).toLocaleDateString('sr-RS')}</span>
