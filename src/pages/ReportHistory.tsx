@@ -432,35 +432,25 @@ const ReportHistory = () => {
             </div>
           </div>
           
-          ${report.anamnesis ? `<div class="section">
+          <div class="section">
             <div class="section-title">Anamneza</div>
-            <div class="text-content">${report.anamnesis}</div>
-          </div>` : ''}
+            <div class="text-content">${report.anamnesis || ''}</div>
+          </div>
           
-          ${report.objective_findings ? `<div class="section">
+          <div class="section">
             <div class="section-title">Objektivni nalaz</div>
-            <div class="text-content">${report.objective_findings}</div>
-          </div>` : ''}
+            <div class="text-content">${report.objective_findings || ''}</div>
+          </div>
           
-          ${report.diagnosis ? `<div class="section">
+          <div class="section">
             <div class="section-title">Dijagnoza</div>
-            <div class="text-content">${report.diagnosis}</div>
-          </div>` : ''}
+            <div class="text-content">${report.diagnosis || ''}</div>
+          </div>
           
-          ${report.therapy ? `<div class="section">
+          <div class="section">
             <div class="section-title">Terapija</div>
-            <div class="text-content">${report.therapy}</div>
-          </div>` : ''}
-          
-          ${report.control ? `<div class="section">
-            <div class="section-title">Kontrola</div>
-            <div class="text-content">${report.control}</div>
-          </div>` : ''}
-          
-          ${report.echo_findings ? `<div class="section">
-            <div class="section-title">EHO nalaz</div>
-            <div class="text-content">${report.echo_findings}</div>
-          </div>` : ''}
+            <div class="text-content">${report.therapy || ''}</div>
+          </div>
           
           ${report.lab_results ? `<div class="lab-results">
             <div class="section-title" style="color: #c05621; margin-bottom: 10px;">Laboratorijski nalazi</div>
