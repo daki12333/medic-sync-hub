@@ -423,7 +423,7 @@ const ReportHistory = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <div>
                 <span class="field-value">${report.patients.first_name} ${report.patients.last_name}</span>
-                ${report.patients.date_of_birth ? `<div class="birth-year">Godina rođenja: ${new Date(report.patients.date_of_birth).getFullYear()}</div>` : ''}
+                ${report.patients.date_of_birth ? `<div class="birth-year">Datum rođenja: ${new Date(report.patients.date_of_birth).toLocaleDateString('sr-RS')}</div>` : ''}
               </div>
             </div>
             <div class="field">

@@ -605,7 +605,7 @@ const SpecialistReport = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <div>
                 <span class="field-value">${reportData.patient_name}</span>
-                ${reportData.patient_dob ? `<div class="birth-year">Godina rođenja: ${new Date(reportData.patient_dob).getFullYear()}</div>` : ''}
+                ${reportData.patient_dob ? `<div class="birth-year">Datum rođenja: ${new Date(reportData.patient_dob).toLocaleDateString('sr-RS')}</div>` : ''}
               </div>
             </div>
             

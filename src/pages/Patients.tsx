@@ -493,7 +493,7 @@ const Patients = () => {
               <span class="field-label">Ime i prezime pacijenta:</span>
               <div>
                 <span class="field-value">${selectedPatient.first_name} ${selectedPatient.last_name}</span>
-                ${selectedPatient.date_of_birth ? `<div class="birth-year">Godina rođenja: ${new Date(selectedPatient.date_of_birth).getFullYear()}</div>` : ''}
+                ${selectedPatient.date_of_birth ? `<div class="birth-year">Datum rođenja: ${new Date(selectedPatient.date_of_birth).toLocaleDateString('sr-RS')}</div>` : ''}
               </div>
             </div>
             <div class="field">
