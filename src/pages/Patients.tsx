@@ -748,10 +748,10 @@ const Patients = () => {
                             <span>Rođen: {new Date(patient.date_of_birth).toLocaleDateString('sr-RS')}</span>
                           </div>
                         )}
-                        {patient.phone && (
+                        {patient.phone && patient.phone.trim() && (
                           <div className="flex items-center space-x-2 group-hover:text-primary/70 transition-colors duration-300">
                             <Phone className="h-4 w-4 flex-shrink-0" />
-                            <span>{patient.phone}</span>
+                            <span>{patient.phone.trim()}</span>
                           </div>
                         )}
                       </div>
