@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter, DrawerClose } from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Users,
@@ -22,9 +24,10 @@ import {
   ArrowLeft,
   CheckCircle,
   XCircle,
-  Eye,
-  EyeOff,
-  KeyRound
+  KeyRound,
+  Megaphone,
+  Send,
+  Phone
 } from 'lucide-react';
 
 interface Profile {
@@ -41,6 +44,12 @@ interface Profile {
   updated_at: string;
 }
 
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+}
 
 const Admin = () => {
   const { user, profile, loading } = useAuth();
@@ -48,9 +57,16 @@ const Admin = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [creatingUser, setCreatingUser] = useState(false);
+  
+  // Promotion states
+  const [promotionMessage, setPromotionMessage] = useState('');
+  const [sendToAll, setSendToAll] = useState(true);
+  const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
+  const [sendingSMS, setSendingSMS] = useState(false);
   
   // Form states
   const [newUser, setNewUser] = useState({
@@ -80,10 +96,20 @@ const Admin = () => {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
-         .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
       setProfiles((profilesData || []).filter(p => p.role !== 'receptionist') as Profile[]);
+
+      // Fetch all patients with phone numbers
+      const { data: patientsData, error: patientsError } = await supabase
+        .from('patients')
+        .select('id, first_name, last_name, phone')
+        .not('phone', 'is', null)
+        .order('last_name', { ascending: true });
+
+      if (patientsError) throw patientsError;
+      setPatients(patientsData || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -252,6 +278,76 @@ const Admin = () => {
     }
   };
 
+  const sendPromotion = async () => {
+    if (!promotionMessage.trim()) {
+      toast({
+        title: "Greška",
+        description: "Unesite tekst poruke",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const recipientPhones = sendToAll
+      ? patients.filter(p => p.phone).map(p => p.phone!)
+      : patients.filter(p => selectedPatients.includes(p.id) && p.phone).map(p => p.phone!);
+
+    if (recipientPhones.length === 0) {
+      toast({
+        title: "Greška",
+        description: "Nema pacijenata sa brojevima telefona",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSendingSMS(true);
+      
+      const { data, error } = await supabase.functions.invoke('send-sms', {
+        body: {
+          recipients: recipientPhones,
+          message: promotionMessage
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: "Uspešno",
+        description: `Promocija poslata na ${data.sent} broj(eva). ${data.failed > 0 ? `Neuspešno: ${data.failed}` : ''}`,
+      });
+
+      setPromotionMessage('');
+      setSelectedPatients([]);
+    } catch (error: any) {
+      console.error('Error sending promotion:', error);
+      toast({
+        title: "Greška",
+        description: error.message || "Nije moguće poslati promociju",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingSMS(false);
+    }
+  };
+
+  const togglePatientSelection = (patientId: string) => {
+    setSelectedPatients(prev => 
+      prev.includes(patientId) 
+        ? prev.filter(id => id !== patientId)
+        : [...prev, patientId]
+    );
+  };
+
+  const selectAllPatients = () => {
+    setSelectedPatients(patients.map(p => p.id));
+  };
+
+  const deselectAllPatients = () => {
+    setSelectedPatients([]);
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -282,6 +378,8 @@ const Admin = () => {
       </div>
     );
   }
+
+  const patientsWithPhone = patients.filter(p => p.phone);
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -314,10 +412,14 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-1">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Korisnici</span>
+            </TabsTrigger>
+            <TabsTrigger value="promotions" className="flex items-center space-x-2">
+              <Megaphone className="h-4 w-4" />
+              <span>Promocije</span>
             </TabsTrigger>
           </TabsList>
 
@@ -479,6 +581,142 @@ const Admin = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          {/* Promotions Tab */}
+          <TabsContent value="promotions" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">SMS Promocije</h2>
+              <p className="text-muted-foreground">Pošaljite promotivne poruke pacijentima</p>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Message Input */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Megaphone className="h-5 w-5 text-primary" />
+                    Poruka
+                  </CardTitle>
+                  <CardDescription>Unesite tekst promotivne poruke</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Textarea
+                    placeholder="Poštovani, obaveštavamo Vas o specijalnoj akciji..."
+                    value={promotionMessage}
+                    onChange={(e) => setPromotionMessage(e.target.value)}
+                    className="min-h-[150px]"
+                  />
+                  <div className="text-sm text-muted-foreground">
+                    Karaktera: {promotionMessage.length} / 160 (1 SMS)
+                    {promotionMessage.length > 160 && (
+                      <span className="text-warning ml-2">
+                        ({Math.ceil(promotionMessage.length / 160)} SMS poruke)
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recipients Selection */}
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-primary" />
+                    Primaoci ({patientsWithPhone.length})
+                  </CardTitle>
+                  <CardDescription>Izaberite kome šaljete poruku</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="sendToAll" 
+                        checked={sendToAll}
+                        onCheckedChange={(checked) => {
+                          setSendToAll(checked as boolean);
+                          if (checked) setSelectedPatients([]);
+                        }}
+                      />
+                      <Label htmlFor="sendToAll" className="font-medium">Pošalji svima</Label>
+                    </div>
+                  </div>
+
+                  {!sendToAll && (
+                    <>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={selectAllPatients}>
+                          Izaberi sve
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={deselectAllPatients}>
+                          Poništi izbor
+                        </Button>
+                      </div>
+                      <ScrollArea className="h-[200px] border rounded-md p-3">
+                        <div className="space-y-2">
+                          {patientsWithPhone.map((patient) => (
+                            <div key={patient.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={patient.id}
+                                checked={selectedPatients.includes(patient.id)}
+                                onCheckedChange={() => togglePatientSelection(patient.id)}
+                              />
+                              <Label htmlFor={patient.id} className="flex-1 cursor-pointer">
+                                <span className="font-medium">{patient.first_name} {patient.last_name}</span>
+                                <span className="text-muted-foreground ml-2 text-sm">{patient.phone}</span>
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      <p className="text-sm text-muted-foreground">
+                        Izabrano: {selectedPatients.length} pacijent(a)
+                      </p>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Send Button */}
+            <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">
+                      {sendToAll 
+                        ? `Slanje na ${patientsWithPhone.length} broj(eva)`
+                        : `Slanje na ${selectedPatients.length} izabrani(h) broj(eva)`
+                      }
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {promotionMessage.length > 0 
+                        ? `${Math.ceil(promotionMessage.length / 160)} SMS po primaocu`
+                        : 'Unesite poruku za slanje'
+                      }
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={sendPromotion}
+                    disabled={sendingSMS || !promotionMessage.trim() || (!sendToAll && selectedPatients.length === 0)}
+                    className="bg-gradient-medical hover:shadow-medical"
+                    size="lg"
+                  >
+                    {sendingSMS ? (
+                      <>
+                        <Activity className="h-4 w-4 mr-2 animate-spin" />
+                        Slanje...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        Pošalji promociju
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
