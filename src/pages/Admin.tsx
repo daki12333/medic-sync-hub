@@ -29,7 +29,8 @@ import {
   Send,
   Phone,
   History,
-  TrendingUp
+  TrendingUp,
+  Search
 } from 'lucide-react';
 
 interface Profile {
@@ -79,6 +80,7 @@ const Admin = () => {
   const [sendToAll, setSendToAll] = useState(true);
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
   
   // Form states
   const [newUser, setNewUser] = useState({
@@ -671,6 +673,15 @@ const Admin = () => {
 
                   {!sendToAll && (
                     <>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Pretraži pacijente..."
+                          value={patientSearch}
+                          onChange={(e) => setPatientSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={selectAllPatients}>
                           Izaberi sve
@@ -681,7 +692,13 @@ const Admin = () => {
                       </div>
                       <ScrollArea className="h-[200px] border rounded-md p-3">
                         <div className="space-y-2">
-                          {patientsWithPhone.map((patient) => (
+                          {patientsWithPhone
+                            .filter((patient) => {
+                              if (!patientSearch.trim()) return true;
+                              const fullName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
+                              return fullName.includes(patientSearch.toLowerCase());
+                            })
+                            .map((patient) => (
                             <div key={patient.id} className="flex items-center space-x-2">
                               <Checkbox 
                                 id={patient.id}
