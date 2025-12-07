@@ -181,6 +181,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_campaigns: {
+        Row: {
+          created_at: string
+          created_by: string
+          failed_sends: number
+          id: string
+          message: string
+          successful_sends: number
+          total_recipients: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          failed_sends?: number
+          id?: string
+          message: string
+          successful_sends?: number
+          total_recipients?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          failed_sends?: number
+          id?: string
+          message?: string
+          successful_sends?: number
+          total_recipients?: number
+        }
+        Relationships: []
+      }
       specialist_reports: {
         Row: {
           anamnesis: string | null

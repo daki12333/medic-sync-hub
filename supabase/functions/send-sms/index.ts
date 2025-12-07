@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,7 @@ const corsHeaders = {
 interface SMSRequest {
   recipients: string[];
   message: string;
+  userId: string;
 }
 
 serve(async (req) => {
@@ -28,7 +30,7 @@ serve(async (req) => {
       );
     }
 
-    const { recipients, message }: SMSRequest = await req.json();
+    const { recipients, message, userId }: SMSRequest = await req.json();
 
     if (!recipients || recipients.length === 0) {
       return new Response(
@@ -45,6 +47,11 @@ serve(async (req) => {
     }
 
     console.log(`Sending SMS to ${recipients.length} recipients`);
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const results = [];
     const errors = [];
@@ -78,6 +85,25 @@ serve(async (req) => {
       } catch (error) {
         console.error(`Error sending SMS to ${phone}:`, error);
         errors.push({ phone, success: false, error: error.message });
+      }
+    }
+
+    // Save campaign to database
+    if (userId) {
+      const { error: campaignError } = await supabase
+        .from('sms_campaigns')
+        .insert({
+          message: message,
+          total_recipients: recipients.length,
+          successful_sends: results.length,
+          failed_sends: errors.length,
+          created_by: userId
+        });
+
+      if (campaignError) {
+        console.error('Error saving campaign:', campaignError);
+      } else {
+        console.log('Campaign saved successfully');
       }
     }
 

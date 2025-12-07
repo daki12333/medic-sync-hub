@@ -27,7 +27,9 @@ import {
   KeyRound,
   Megaphone,
   Send,
-  Phone
+  Phone,
+  History,
+  TrendingUp
 } from 'lucide-react';
 
 interface Profile {
@@ -51,6 +53,15 @@ interface Patient {
   phone: string | null;
 }
 
+interface SMSCampaign {
+  id: string;
+  message: string;
+  total_recipients: number;
+  successful_sends: number;
+  failed_sends: number;
+  created_at: string;
+}
+
 const Admin = () => {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +69,7 @@ const Admin = () => {
   const isMobile = useIsMobile();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [campaigns, setCampaigns] = useState<SMSCampaign[]>([]);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [creatingUser, setCreatingUser] = useState(false);
@@ -110,6 +122,15 @@ const Admin = () => {
 
       if (patientsError) throw patientsError;
       setPatients(patientsData || []);
+
+      // Fetch SMS campaigns
+      const { data: campaignsData, error: campaignsError } = await supabase
+        .from('sms_campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (campaignsError) throw campaignsError;
+      setCampaigns(campaignsData || []);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -307,7 +328,8 @@ const Admin = () => {
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: {
           recipients: recipientPhones,
-          message: promotionMessage
+          message: promotionMessage,
+          userId: user?.id
         }
       });
 
@@ -321,6 +343,7 @@ const Admin = () => {
 
       setPromotionMessage('');
       setSelectedPatients([]);
+      fetchData(); // Refresh to get new campaign
     } catch (error: any) {
       console.error('Error sending promotion:', error);
       toast({
@@ -589,6 +612,67 @@ const Admin = () => {
               <h2 className="text-2xl font-bold text-foreground">SMS Promocije</h2>
               <p className="text-muted-foreground">Pošaljite promotivne poruke pacijentima</p>
             </div>
+
+            {/* Campaign History */}
+            {campaigns.length > 0 && (
+              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="h-5 w-5 text-primary" />
+                    Istorija kampanja
+                  </CardTitle>
+                  <CardDescription>Prethodne SMS kampanje sa uspešnošću slanja</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[250px]">
+                    <div className="space-y-3">
+                      {campaigns.map((campaign) => {
+                        const successRate = campaign.total_recipients > 0 
+                          ? Math.round((campaign.successful_sends / campaign.total_recipients) * 100) 
+                          : 0;
+                        
+                        return (
+                          <div 
+                            key={campaign.id} 
+                            className="p-4 border border-border/50 rounded-lg bg-background/50"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-foreground line-clamp-2">
+                                  {campaign.message}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(campaign.created_at).toLocaleDateString('sr-RS', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                <div className="text-right">
+                                  <div className="flex items-center gap-1">
+                                    <TrendingUp className={`h-4 w-4 ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`} />
+                                    <span className={`font-bold text-lg ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`}>
+                                      {successRate}%
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    {campaign.successful_sends}/{campaign.total_recipients} poslato
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Message Input */}
