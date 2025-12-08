@@ -324,9 +324,15 @@ const Admin = () => {
       return;
     }
 
+    setSendingSMS(true);
+    
+    // Show initial toast that process has started
+    toast({
+      title: "Slanje u toku...",
+      description: `Šaljem poruke na ${recipientPhones.length} broj(eva). Molimo sačekajte...`,
+    });
+
     try {
-      setSendingSMS(true);
-      
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: {
           recipients: recipientPhones,
@@ -338,10 +344,29 @@ const Admin = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      toast({
-        title: "Uspešno",
-        description: `Promocija poslata na ${data.sent} broj(eva). ${data.failed > 0 ? `Neuspešno: ${data.failed}` : ''}`,
-      });
+      // Show final result based on actual API response
+      const successCount = data.sent || 0;
+      const failedCount = data.failed || 0;
+      const totalCount = successCount + failedCount;
+
+      if (failedCount === 0) {
+        toast({
+          title: "Uspešno završeno!",
+          description: `Sve poruke su uspešno poslate (${successCount}/${totalCount})`,
+        });
+      } else if (successCount === 0) {
+        toast({
+          title: "Slanje neuspešno",
+          description: `Nijedna poruka nije poslata. Neuspešno: ${failedCount}`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Delimično uspešno",
+          description: `Uspešno: ${successCount}, Neuspešno: ${failedCount} od ukupno ${totalCount}`,
+          variant: "destructive",
+        });
+      }
 
       setPromotionMessage('');
       setSelectedPatients([]);
