@@ -48,6 +48,7 @@ serve(async (req) => {
     }
 
     console.log(`Sending SMS to ${recipients.length} recipients via SMS Gate`);
+    console.log(`Using device ID: ${deviceId}`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -64,29 +65,41 @@ serve(async (req) => {
       try {
         console.log(`Sending SMS to ${phone}`);
         
+        // SMS Gate API format: phoneNumbers array and textMessage object
+        const requestBody = {
+          phoneNumbers: [phone],
+          message: message,
+        };
+        
+        console.log(`Request body: ${JSON.stringify(requestBody)}`);
+        
         const response = await fetch(
-          "https://api.sms-gate.app/3rdparty/v1/message",
+          `https://api.sms-gate.app/3rdparty/v1/message?skipPhoneValidation=true`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Authorization": `Basic ${credentials}`,
-              "X-Device-ID": deviceId,
             },
-            body: JSON.stringify({
-              phoneNumbers: [phone],
-              message: message,
-            }),
+            body: JSON.stringify(requestBody),
           }
         );
 
-        const data = await response.json();
+        const responseText = await response.text();
+        console.log(`Response status: ${response.status}, body: ${responseText}`);
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          data = { raw: responseText };
+        }
         
         if (response.ok) {
-          console.log(`SMS sent successfully to ${phone}:`, JSON.stringify(data));
+          console.log(`SMS sent successfully to ${phone}`);
           results.push({ phone, success: true, data });
         } else {
-          console.error(`Failed to send SMS to ${phone}:`, JSON.stringify(data));
+          console.error(`Failed to send SMS to ${phone}: ${responseText}`);
           errors.push({ phone, success: false, error: data });
         }
       } catch (error) {
