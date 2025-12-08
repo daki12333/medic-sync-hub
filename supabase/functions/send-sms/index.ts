@@ -19,13 +19,14 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get("TEXTBEE_API_KEY");
-    const deviceId = Deno.env.get("TEXTBEE_DEVICE_ID");
+    const username = Deno.env.get("SMSGATE_USERNAME");
+    const password = Deno.env.get("SMSGATE_PASSWORD");
+    const deviceId = Deno.env.get("SMSGATE_DEVICE_ID");
 
-    if (!apiKey || !deviceId) {
-      console.error("Missing TextBee credentials");
+    if (!username || !password || !deviceId) {
+      console.error("Missing SMS Gate credentials");
       return new Response(
-        JSON.stringify({ error: "TextBee credentials not configured" }),
+        JSON.stringify({ error: "SMS Gate credentials not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -46,28 +47,34 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Sending SMS to ${recipients.length} recipients`);
+    console.log(`Sending SMS to ${recipients.length} recipients via SMS Gate`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Basic Auth encoding
+    const credentials = btoa(`${username}:${password}`);
+
     const results = [];
     const errors = [];
 
     for (const phone of recipients) {
       try {
+        console.log(`Sending SMS to ${phone}`);
+        
         const response = await fetch(
-          `https://api.textbee.dev/api/v1/gateway/devices/${deviceId}/sendSMS`,
+          "https://api.sms-gate.app/3rdparty/v1/message",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": apiKey,
+              "Authorization": `Basic ${credentials}`,
+              "X-Device-ID": deviceId,
             },
             body: JSON.stringify({
-              recipients: [phone],
+              phoneNumbers: [phone],
               message: message,
             }),
           }
@@ -76,14 +83,14 @@ serve(async (req) => {
         const data = await response.json();
         
         if (response.ok) {
-          console.log(`SMS sent successfully to ${phone}`);
+          console.log(`SMS sent successfully to ${phone}:`, JSON.stringify(data));
           results.push({ phone, success: true, data });
         } else {
-          console.error(`Failed to send SMS to ${phone}:`, data);
+          console.error(`Failed to send SMS to ${phone}:`, JSON.stringify(data));
           errors.push({ phone, success: false, error: data });
         }
       } catch (error) {
-        console.error(`Error sending SMS to ${phone}:`, error);
+        console.error(`Error sending SMS to ${phone}:`, error.message);
         errors.push({ phone, success: false, error: error.message });
       }
     }
