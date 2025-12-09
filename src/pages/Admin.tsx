@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Users,
@@ -81,6 +82,13 @@ const Admin = () => {
   const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
+  
+  // Progress tracking states
+  const [sendingProgress, setSendingProgress] = useState(0);
+  const [sentCount, setSentCount] = useState(0);
+  const [successCount, setSuccessCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
+  const [totalToSend, setTotalToSend] = useState(0);
   
   // Form states
   const [newUser, setNewUser] = useState({
@@ -324,46 +332,84 @@ const Admin = () => {
       return;
     }
 
+    // Reset progress states
     setSendingSMS(true);
-    
-    // Show initial toast that process has started
-    toast({
-      title: "Slanje u toku...",
-      description: `Šaljem poruke na ${recipientPhones.length} broj(eva). Molimo sačekajte...`,
-    });
+    setSendingProgress(0);
+    setSentCount(0);
+    setSuccessCount(0);
+    setFailedCount(0);
+    setTotalToSend(recipientPhones.length);
+
+    let successfulSends = 0;
+    let failedSends = 0;
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-sms', {
-        body: {
-          recipients: recipientPhones,
-          message: promotionMessage,
-          userId: user?.id
+      // Send SMS one by one
+      for (let i = 0; i < recipientPhones.length; i++) {
+        const phone = recipientPhones[i];
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('send-single-sms', {
+            body: {
+              phone: phone,
+              message: promotionMessage
+            }
+          });
+
+          if (error || !data?.success) {
+            failedSends++;
+            setFailedCount(failedSends);
+          } else {
+            successfulSends++;
+            setSuccessCount(successfulSends);
+          }
+        } catch (err) {
+          failedSends++;
+          setFailedCount(failedSends);
         }
-      });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+        // Update progress
+        const currentProgress = Math.round(((i + 1) / recipientPhones.length) * 100);
+        setSentCount(i + 1);
+        setSendingProgress(currentProgress);
 
-      // Show final result based on actual API response
-      const successCount = data.sent || 0;
-      const failedCount = data.failed || 0;
-      const totalCount = successCount + failedCount;
+        // Small delay between messages (300ms)
+        if (i < recipientPhones.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
 
-      if (failedCount === 0) {
+      // Save campaign to database
+      const { error: campaignError } = await supabase
+        .from('sms_campaigns')
+        .insert({
+          message: promotionMessage,
+          total_recipients: recipientPhones.length,
+          successful_sends: successfulSends,
+          failed_sends: failedSends,
+          created_by: user?.id
+        });
+
+      if (campaignError) {
+        console.error('Error saving campaign:', campaignError);
+      }
+
+      // Show final result
+      if (failedSends === 0) {
         toast({
           title: "Uspešno završeno!",
-          description: `Sve poruke su uspešno poslate (${successCount}/${totalCount})`,
+          description: `Sve poruke su uspešno poslate (${successfulSends}/${recipientPhones.length})`,
         });
-      } else if (successCount === 0) {
+      } else if (successfulSends === 0) {
         toast({
           title: "Slanje neuspešno",
-          description: `Nijedna poruka nije poslata. Neuspešno: ${failedCount}`,
+          description: `Nijedna poruka nije poslata. Neuspešno: ${failedSends}`,
           variant: "destructive",
         });
       } else {
         toast({
           title: "Delimično uspešno",
-          description: `Uspešno: ${successCount}, Neuspešno: ${failedCount} od ukupno ${totalCount}`,
+          description: `Uspešno: ${successfulSends}, Neuspešno: ${failedSends} od ukupno ${recipientPhones.length}`,
           variant: "destructive",
         });
       }
@@ -380,6 +426,14 @@ const Admin = () => {
       });
     } finally {
       setSendingSMS(false);
+      // Reset progress after a short delay
+      setTimeout(() => {
+        setSendingProgress(0);
+        setSentCount(0);
+        setSuccessCount(0);
+        setFailedCount(0);
+        setTotalToSend(0);
+      }, 2000);
     }
   };
 
@@ -462,7 +516,7 @@ const Admin = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="users" className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Korisnici</span>
@@ -470,10 +524,6 @@ const Admin = () => {
             <TabsTrigger value="promotions" className="flex items-center space-x-2">
               <Megaphone className="h-4 w-4" />
               <span>Promocije</span>
-            </TabsTrigger>
-            <TabsTrigger value="history" className="flex items-center space-x-2">
-              <History className="h-4 w-4" />
-              <span>Istorija</span>
             </TabsTrigger>
           </TabsList>
 
@@ -747,172 +797,186 @@ const Admin = () => {
               </Card>
             </div>
 
-            {/* Send Button */}
+            {/* Send Button with Progress */}
             <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      {sendToAll 
-                        ? `Slanje na ${patientsWithPhone.length} broj(eva)`
-                        : `Slanje na ${selectedPatients.length} izabrani(h) broj(eva)`
-                      }
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {promotionMessage.length > 0 
-                        ? `${Math.ceil(promotionMessage.length / 160)} SMS po primaocu`
-                        : 'Unesite poruku za slanje'
-                      }
-                    </p>
+                {sendingSMS ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-medium">Slanje SMS poruka...</p>
+                      <span className="text-lg font-bold text-primary">{sendingProgress}%</span>
+                    </div>
+                    <Progress value={sendingProgress} className="h-3" />
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>Poslato: {sentCount}/{totalToSend}</span>
+                      <span className="flex items-center gap-4">
+                        <span className="flex items-center gap-1">
+                          <CheckCircle className="h-4 w-4 text-success" />
+                          Uspešno: {successCount}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <XCircle className="h-4 w-4 text-destructive" />
+                          Neuspešno: {failedCount}
+                        </span>
+                      </span>
+                    </div>
                   </div>
-                  <Button 
-                    onClick={sendPromotion}
-                    disabled={sendingSMS || !promotionMessage.trim() || (!sendToAll && selectedPatients.length === 0)}
-                    className="bg-gradient-medical hover:shadow-medical"
-                    size="lg"
-                  >
-                    {sendingSMS ? (
-                      <>
-                        <Activity className="h-4 w-4 mr-2 animate-spin" />
-                        Slanje...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Pošalji promociju
-                      </>
-                    )}
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">
+                        {sendToAll 
+                          ? `Slanje na ${patientsWithPhone.length} broj(eva)`
+                          : `Slanje na ${selectedPatients.length} izabrani(h) broj(eva)`
+                        }
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {promotionMessage.length > 0 
+                          ? `${Math.ceil(promotionMessage.length / 160)} SMS po primaocu`
+                          : 'Unesite poruku za slanje'
+                        }
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={sendPromotion}
+                      disabled={sendingSMS || !promotionMessage.trim() || (!sendToAll && selectedPatients.length === 0)}
+                      className="bg-gradient-medical hover:shadow-medical"
+                      size="lg"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Pošalji promociju
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* History Tab */}
-          <TabsContent value="history" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Istorija Promocija</h2>
-              <p className="text-muted-foreground">Pregled svih SMS kampanja sa statistikom uspešnosti</p>
-            </div>
+            {/* History Section */}
+            <div className="border-t border-border/50 pt-8 mt-8">
+              <div className="flex items-center gap-2 mb-6">
+                <History className="h-6 w-6 text-primary" />
+                <h3 className="text-xl font-bold text-foreground">ISTORIJA</h3>
+              </div>
 
-            {campaigns.length === 0 ? (
-              <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
-                  <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Nema prethodnih kampanja</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {/* Summary Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Megaphone className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-bold text-foreground">{campaigns.length}</p>
-                          <p className="text-sm text-muted-foreground">Ukupno kampanja</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-success/10">
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-bold text-foreground">
-                            {campaigns.reduce((acc, c) => acc + c.successful_sends, 0)}
-                          </p>
-                          <p className="text-sm text-muted-foreground">Uspešno poslato</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-warning/10">
-                          <TrendingUp className="h-5 w-5 text-warning" />
-                        </div>
-                        <div>
-                          <p className="text-2xl font-bold text-foreground">
-                            {campaigns.length > 0 
-                              ? Math.round(
-                                  (campaigns.reduce((acc, c) => acc + c.successful_sends, 0) / 
-                                   campaigns.reduce((acc, c) => acc + c.total_recipients, 0)) * 100
-                                ) || 0
-                              : 0}%
-                          </p>
-                          <p className="text-sm text-muted-foreground">Prosečna uspešnost</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Campaign List */}
+              {campaigns.length === 0 ? (
                 <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <History className="h-5 w-5 text-primary" />
-                      Sve kampanje
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {campaigns.map((campaign) => {
-                        const successRate = campaign.total_recipients > 0 
-                          ? Math.round((campaign.successful_sends / campaign.total_recipients) * 100) 
-                          : 0;
-                        
-                        return (
-                          <div 
-                            key={campaign.id} 
-                            className="p-4 border border-border/50 rounded-lg bg-background/50"
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-foreground">
-                                  {campaign.message}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  {new Date(campaign.created_at).toLocaleDateString('sr-RS', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-3 shrink-0">
-                                <div className="text-right">
-                                  <div className="flex items-center gap-1">
-                                    <TrendingUp className={`h-4 w-4 ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`} />
-                                    <span className={`font-bold text-lg ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`}>
-                                      {successRate}%
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">
-                                    {campaign.successful_sends}/{campaign.total_recipients} poslato
+                  <CardContent className="p-8 text-center">
+                    <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">Nema prethodnih kampanja</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {/* Summary Stats */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Megaphone className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-foreground">{campaigns.length}</p>
+                            <p className="text-sm text-muted-foreground">Ukupno kampanja</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-success/10">
+                            <CheckCircle className="h-5 w-5 text-success" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-foreground">
+                              {campaigns.reduce((acc, c) => acc + c.successful_sends, 0)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">Uspešno poslato</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-warning/10">
+                            <TrendingUp className="h-5 w-5 text-warning" />
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-foreground">
+                              {campaigns.length > 0 
+                                ? Math.round(
+                                    (campaigns.reduce((acc, c) => acc + c.successful_sends, 0) / 
+                                     campaigns.reduce((acc, c) => acc + c.total_recipients, 0)) * 100
+                                  ) || 0
+                                : 0}%
+                            </p>
+                            <p className="text-sm text-muted-foreground">Prosečna uspešnost</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Campaign List */}
+                  <Card className="border-border/50 bg-card/80 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <History className="h-5 w-5 text-primary" />
+                        Sve kampanje
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {campaigns.map((campaign) => {
+                          const successRate = campaign.total_recipients > 0 
+                            ? Math.round((campaign.successful_sends / campaign.total_recipients) * 100) 
+                            : 0;
+                          
+                          return (
+                            <div 
+                              key={campaign.id} 
+                              className="p-4 border border-border/50 rounded-lg bg-background/50"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-foreground">
+                                    {campaign.message}
                                   </p>
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    {new Date(campaign.created_at).toLocaleDateString('sr-RS', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <div className="text-right">
+                                    <div className="flex items-center gap-1">
+                                      <TrendingUp className={`h-4 w-4 ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`} />
+                                      <span className={`font-bold text-lg ${successRate >= 80 ? 'text-success' : successRate >= 50 ? 'text-warning' : 'text-destructive'}`}>
+                                        {successRate}%
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                      {campaign.successful_sends}/{campaign.total_recipients} poslato
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>
